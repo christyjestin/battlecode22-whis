@@ -19,35 +19,37 @@ public strictfp class Archon {
             Direction.NORTHWEST,
     };
 
+    static MapLocation center = null;
+    static int minerCount = 0;
+
     /**
      * Run a single turn for an Archon.
      * This code is wrapped inside the infinite loop in run(), so it is called once
      * per turn.
      */
     static void runArchon(RobotController rc) throws GameActionException {
+        if (center == null)
+            center = new MapLocation(rc.getMapWidth() / 2, rc.getMapHeight() / 2);
+        // some directions
+        Direction towardsCenter = rc.getLocation().directionTo(center);
+        Direction towardsRight = towardsCenter.rotateRight();
+        Direction towardsLeft = towardsCenter.rotateLeft();
         while (true) {
-            // Pick a direction to build in.
-            Direction dir = directions[rng.nextInt(directions.length)];
-            rc.setIndicatorString("Trying to build a miner");
-            // only spawn miners for now
-            if (rc.canBuildRobot(RobotType.MINER, dir)) {
-                rc.buildRobot(RobotType.MINER, dir);
+            int random = rng.nextInt(3);
+            Direction dir = random == 0 ? towardsRight : (random == 1 ? towardsCenter : towardsLeft);
+            if (minerCount < 100 && rng.nextBoolean()) {
+                rc.setIndicatorString("Trying to build a miner");
+                // spawn both miners and soldiers
+                if (rc.canBuildRobot(RobotType.MINER, dir)) {
+                    rc.buildRobot(RobotType.MINER, dir);
+                    minerCount++;
+                }
+            } else {
+                rc.setIndicatorString("Trying to build a soldier");
+                if (rc.canBuildRobot(RobotType.SOLDIER, dir)) {
+                    rc.buildRobot(RobotType.SOLDIER, dir);
+                }
             }
         }
-
-        // code to spawn 1/2 miners and 1/2 soldiers
-        // if (rng.nextBoolean()) {
-        // // Let's try to build a miner.
-        // rc.setIndicatorString("Trying to build a miner");
-        // if (rc.canBuildRobot(RobotType.MINER, dir)) {
-        // rc.buildRobot(RobotType.MINER, dir);
-        // }
-        // } else {
-        // // Let's try to build a soldier.
-        // rc.setIndicatorString("Trying to build a soldier");
-        // if (rc.canBuildRobot(RobotType.SOLDIER, dir)) {
-        // rc.buildRobot(RobotType.SOLDIER, dir);
-        // }
-        // }
     }
 }

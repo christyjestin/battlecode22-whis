@@ -4,7 +4,8 @@ import battlecode.common.*;
 import java.util.Random;
 
 public strictfp class Miner {
-    static int randomCounter = 0;
+    /** A random number generator. */
+    static final Random rng = new Random(6147);
 
     /** Array containing all the possible movement directions. */
     static final Direction[] directions = {
@@ -18,12 +19,21 @@ public strictfp class Miner {
             Direction.NORTHWEST,
     };
 
+    static MapLocation center = null;
+
     /**
      * Run a single turn for a Miner.
      * This code is wrapped inside the infinite loop in run(), so it is called once
      * per turn.
      */
     static void runMiner(RobotController rc) throws GameActionException {
+        if (center == null)
+            center = new MapLocation(rc.getMapWidth() / 2, rc.getMapHeight() / 2);
+        // some directions
+        Direction towardsCenter = rc.getLocation().directionTo(center);
+        Direction towardsRight = towardsCenter.rotateRight();
+        Direction towardsLeft = towardsCenter.rotateLeft();
+
         // Try to mine on squares around us.
         MapLocation me = rc.getLocation();
         for (int dx = -1; dx <= 1; dx++) {
@@ -72,16 +82,16 @@ public strictfp class Miner {
                 tryMove++;
             }
         } else {
-            // Also try to move randomly.
-            Direction toMove = directions[randomCounter%(directions.length)];
+            // Also try to move randomly (but towards center)
+            int random = rng.nextInt(3);
+            Direction dir = random == 0 ? towardsRight : (random == 1 ? towardsCenter : towardsLeft);
             int tryMove = 0;
             while (tryMove < 10) {
-                if (rc.canMove(toMove)) {
-                    rc.move(toMove);
+                if (rc.canMove(dir)) {
+                    rc.move(dir);
                 }
                 tryMove++;
             }
-            randomCounter++;
         }
     }
 }
