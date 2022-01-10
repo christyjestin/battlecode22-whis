@@ -4,8 +4,7 @@ import battlecode.common.*;
 import java.util.Random;
 
 public strictfp class Miner {
-    /** A random number generator. */
-    static final Random rng = new Random(6147);
+    static int randomCounter = 0;
 
     /** Array containing all the possible movement directions. */
     static final Direction[] directions = {
@@ -65,16 +64,24 @@ public strictfp class Miner {
 
         if (targetLocation != null) {
             Direction toMove = me.directionTo(targetLocation);
-            if (rc.canMove(toMove)) {
-                rc.move(toMove);
+            int tryMove = 0;
+            while (tryMove < 10 && !rc.getLocation().equals(targetLocation)) {
+                if (rc.canMove(toMove)) {
+                    rc.move(toMove);
+                }
+                tryMove++;
             }
         } else {
             // Also try to move randomly.
-            Direction dir = directions[rng.nextInt(directions.length)];
-            if (rc.canMove(dir)) {
-                rc.move(dir);
-                System.out.println("I moved!");
+            Direction toMove = directions[randomCounter%(directions.length)];
+            int tryMove = 0;
+            while (tryMove < 10) {
+                if (rc.canMove(toMove)) {
+                    rc.move(toMove);
+                }
+                tryMove++;
             }
+            randomCounter++;
         }
     }
 }
