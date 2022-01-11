@@ -71,11 +71,11 @@ public strictfp class Miner {
                 if (rc.canMove(toMove)) {
                     rc.move(toMove);
                 } else {
-                    toMove.rotateRight();
+                    toMove = toMove.rotateRight();
                     if (rc.canMove(toMove)) {
                         rc.move(toMove);
                     }
-                    toMove.rotateLeft();
+                    toMove = toMove.rotateLeft();
                 }
                 moveCounter++;
                 while(!rc.isMovementReady()) {}
