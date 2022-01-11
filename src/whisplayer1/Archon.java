@@ -25,7 +25,6 @@ public strictfp class Archon {
      * per turn.
      */
     static void runArchon(RobotController rc) throws GameActionException {
-        while (true) {
             // Pick a direction to build in.
             Direction dir = directions[rng.nextInt(directions.length)];
             rc.setIndicatorString("Trying to build a miner");
@@ -33,7 +32,7 @@ public strictfp class Archon {
             if (rc.canBuildRobot(RobotType.MINER, dir)) {
                 rc.buildRobot(RobotType.MINER, dir);
             }
-        }
+
 
         // code to spawn 1/2 miners and 1/2 soldiers
         // if (rng.nextBoolean()) {
