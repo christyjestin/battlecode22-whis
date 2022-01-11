@@ -24,7 +24,7 @@ public strictfp class Miner {
      * per turn.
      */
     static void runMiner(RobotController rc, boolean a) throws GameActionException {
-        Direction defaultDir = directions[rng.nextInt(directions.length)];
+        Direction defaultDir = directions[RobotPlayer.rng.nextInt(directions.length)];
         Team opponent = rc.getTeam().opponent();
         int visionRadius = (int) (Math.sqrt(RobotType.MINER.visionRadiusSquared));
         while (true) {
@@ -44,7 +44,6 @@ public strictfp class Miner {
                 }
             }
 
-            int visionRadius = rc.getType().visionRadiusSquared;
             MapLocation[] nearbyLocations = rc.getAllLocationsWithinRadiusSquared(me, visionRadius);
 
             MapLocation targetLocation = null;
