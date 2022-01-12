@@ -2,10 +2,11 @@ package whisplayer1;
 
 import battlecode.common.*;
 import java.util.Random;
+import java.util.HashMap;
 
 public strictfp class Miner {
     /** A random number generator. */
-    static final Random rng = new Random(6147);
+    static final Random rng = new Random();
 
     /** Array containing all the possible movement directions. */
     static final Direction[] directions = {
@@ -19,7 +20,7 @@ public strictfp class Miner {
             Direction.NORTHWEST,
     };
 
-    static MapLocation center = null;
+    static HashMap<Integer, MapLocation> destinations = new HashMap<Integer, MapLocation>();
 
     /**
      * Run a single turn for a Miner.
@@ -27,12 +28,9 @@ public strictfp class Miner {
      * per turn.
      */
     static void runMiner(RobotController rc) throws GameActionException {
-        if (center == null)
-            center = new MapLocation(rc.getMapWidth() / 2, rc.getMapHeight() / 2);
-        // some directions
-        Direction towardsCenter = rc.getLocation().directionTo(center);
-        Direction towardsRight = towardsCenter.rotateRight();
-        Direction towardsLeft = towardsCenter.rotateLeft();
+        final int id = rc.getID();
+        if (!destinations.containsKey(id))
+            destinations.put(id, new MapLocation(rng.nextInt(rc.getMapWidth()), rng.nextInt(rc.getMapHeight())));
 
         // Try to mine on squares around us.
         MapLocation me = rc.getLocation();
@@ -49,6 +47,10 @@ public strictfp class Miner {
                 }
             }
         }
+
+        // return immediately if you can't move
+        if (!rc.isMovementReady())
+            return;
 
         int visionRadius = rc.getType().visionRadiusSquared;
         MapLocation[] nearbyLocations = rc.getAllLocationsWithinRadiusSquared(me, visionRadius);
@@ -72,26 +74,34 @@ public strictfp class Miner {
             }
         }
 
-        if (targetLocation != null) {
-            Direction toMove = me.directionTo(targetLocation);
-            int tryMove = 0;
-            while (tryMove < 10 && !rc.getLocation().equals(targetLocation)) {
-                if (rc.canMove(toMove)) {
-                    rc.move(toMove);
+        // pathfinding algorithm
+        if (targetLocation == null)
+            targetLocation = destinations.get(id);
+        Direction targetDirection = me.directionTo(targetLocation);
+        Direction[] possibleMoves = {
+                targetDirection.rotateLeft().rotateLeft(),
+                targetDirection.rotateLeft(),
+                targetDirection,
+                targetDirection.rotateRight(),
+                targetDirection.rotateRight().rotateRight(),
+        };
+        Direction bestMove = null;
+        int bestScore = -500;
+        for (int i = 0; i < possibleMoves.length; i++) {
+            if (rc.canMove(possibleMoves[i])) {
+                // override pathfinding algorithm if destination is adjacent
+                if (targetLocation != null && rc.adjacentLocation(possibleMoves[i]).equals(targetLocation)) {
+                    bestMove = possibleMoves[i];
+                    break;
                 }
-                tryMove++;
-            }
-        } else {
-            // Also try to move randomly (but towards center)
-            int random = rng.nextInt(3);
-            Direction dir = random == 0 ? towardsRight : (random == 1 ? towardsCenter : towardsLeft);
-            int tryMove = 0;
-            while (tryMove < 10) {
-                if (rc.canMove(dir)) {
-                    rc.move(dir);
+                int score = -10 * Math.abs(i - 2) - rc.senseRubble(rc.adjacentLocation(possibleMoves[i]));
+                if (score > bestScore) {
+                    bestMove = possibleMoves[i];
+                    bestScore = score;
                 }
-                tryMove++;
             }
         }
+        if (bestMove != null)
+            rc.move(bestMove);
     }
 }

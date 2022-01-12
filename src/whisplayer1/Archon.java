@@ -38,14 +38,12 @@ public strictfp class Archon {
             int random = rng.nextInt(3);
             Direction dir = random == 0 ? towardsRight : (random == 1 ? towardsCenter : towardsLeft);
             if (minerCount < 100 && rng.nextBoolean()) {
-                rc.setIndicatorString("Trying to build a miner");
                 // spawn both miners and soldiers
                 if (rc.canBuildRobot(RobotType.MINER, dir)) {
                     rc.buildRobot(RobotType.MINER, dir);
                     minerCount++;
                 }
             } else {
-                rc.setIndicatorString("Trying to build a soldier");
                 if (rc.canBuildRobot(RobotType.SOLDIER, dir)) {
                     rc.buildRobot(RobotType.SOLDIER, dir);
                 }
