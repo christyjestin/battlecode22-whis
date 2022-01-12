@@ -30,7 +30,7 @@ public strictfp class RobotPlayer {
      * we get the same sequence of numbers every time this code is run. This is very
      * useful for debugging!
      */
-    static final Random rng = new Random(6147);
+    static final Random rng = new Random();
 
     /** Array containing all the possible movement directions. */
     static final Direction[] directions = {
@@ -61,7 +61,8 @@ public strictfp class RobotPlayer {
         // Hello world! Standard output is very useful for debugging.
         // Everything you say here will be directly viewable in your terminal when you
         // run a match!
-        // System.out.println("I'm a " + rc.getType() + " and I just got created! I have health " + rc.getHealth());
+        // System.out.println("I'm a " + rc.getType() + " and I just got created! I have
+        // health " + rc.getHealth());
 
         // You can also use indicators to save debug notes in replays.
         // rc.setIndicatorString("Hello world!");
