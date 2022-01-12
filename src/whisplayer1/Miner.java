@@ -74,34 +74,9 @@ public strictfp class Miner {
             }
         }
 
-        // pathfinding algorithm
+        // move using pathfinder algorithm
         if (targetLocation == null)
             targetLocation = destinations.get(id);
-        Direction targetDirection = me.directionTo(targetLocation);
-        Direction[] possibleMoves = {
-                targetDirection.rotateLeft().rotateLeft(),
-                targetDirection.rotateLeft(),
-                targetDirection,
-                targetDirection.rotateRight(),
-                targetDirection.rotateRight().rotateRight(),
-        };
-        Direction bestMove = null;
-        int bestScore = -500;
-        for (int i = 0; i < possibleMoves.length; i++) {
-            if (rc.canMove(possibleMoves[i])) {
-                // override pathfinding algorithm if destination is adjacent
-                if (targetLocation != null && rc.adjacentLocation(possibleMoves[i]).equals(targetLocation)) {
-                    bestMove = possibleMoves[i];
-                    break;
-                }
-                int score = -10 * Math.abs(i - 2) - rc.senseRubble(rc.adjacentLocation(possibleMoves[i]));
-                if (score > bestScore) {
-                    bestMove = possibleMoves[i];
-                    bestScore = score;
-                }
-            }
-        }
-        if (bestMove != null)
-            rc.move(bestMove);
+        RobotPlayer.pathfinder(targetLocation, rc);
     }
 }

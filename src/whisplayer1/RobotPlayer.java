@@ -96,7 +96,7 @@ public strictfp class RobotPlayer {
                         Miner.runMiner(rc);
                         break;
                     case SOLDIER:
-                        runSoldier(rc);
+                        Soldier.runSoldier(rc);
                         break;
                     case LABORATORY: // Examplefuncsplayer doesn't use any of these robot types below.
                     case WATCHTOWER: // You might want to give them a try!
@@ -132,27 +132,32 @@ public strictfp class RobotPlayer {
         // imminent...
     }
 
-    /**
-     * Run a single turn for a Soldier.
-     * This code is wrapped inside the infinite loop in run(), so it is called once
-     * per turn.
-     */
-    static void runSoldier(RobotController rc) throws GameActionException {
-        // Try to attack someone
-        int radius = rc.getType().actionRadiusSquared;
-        Team opponent = rc.getTeam().opponent();
-        RobotInfo[] enemies = rc.senseNearbyRobots(radius, opponent);
-        if (enemies.length > 0) {
-            MapLocation toAttack = enemies[0].location;
-            if (rc.canAttack(toAttack)) {
-                rc.attack(toAttack);
+    public static void pathfinder(MapLocation targetLocation, RobotController rc) throws GameActionException {
+        Direction targetDirection = rc.getLocation().directionTo(targetLocation);
+        Direction[] possibleMoves = {
+                targetDirection.rotateLeft().rotateLeft(),
+                targetDirection.rotateLeft(),
+                targetDirection,
+                targetDirection.rotateRight(),
+                targetDirection.rotateRight().rotateRight(),
+        };
+        Direction bestMove = null;
+        int bestScore = -500;
+        for (int i = 0; i < possibleMoves.length; i++) {
+            if (rc.canMove(possibleMoves[i])) {
+                // override pathfinding algorithm if destination is adjacent
+                if (targetLocation != null && rc.adjacentLocation(possibleMoves[i]).equals(targetLocation)) {
+                    bestMove = possibleMoves[i];
+                    break;
+                }
+                int score = -10 * Math.abs(i - 2) - rc.senseRubble(rc.adjacentLocation(possibleMoves[i]));
+                if (score > bestScore) {
+                    bestMove = possibleMoves[i];
+                    bestScore = score;
+                }
             }
         }
-
-        // Also try to move randomly.
-        Direction dir = directions[rng.nextInt(directions.length)];
-        if (rc.canMove(dir)) {
-            rc.move(dir);
-        }
+        if (bestMove != null)
+            rc.move(bestMove);
     }
 }
