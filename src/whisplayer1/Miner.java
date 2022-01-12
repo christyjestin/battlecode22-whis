@@ -74,6 +74,18 @@ public strictfp class Miner {
             }
         }
 
+        int radiusSquared = rc.getType().actionRadiusSquared;
+        Team opponent = rc.getTeam().opponent();
+        RobotInfo[] enemies = rc.senseNearbyRobots(radiusSquared, opponent);
+        for (RobotInfo enemy : enemies) {
+            MapLocation loc = enemy.getLocation();
+                if (enemy.getType().equals(RobotType.ARCHON)) {
+                    rc.writeSharedArray(30, loc.x);
+                    rc.writeSharedArray(31, loc.y);
+                    break;
+                }
+        }
+
         // move using pathfinder algorithm
         if (targetLocation == null)
             targetLocation = destinations.get(id);

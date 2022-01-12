@@ -97,6 +97,7 @@ public strictfp class RobotPlayer {
                         break;
                     case SOLDIER:
                         Soldier.runSoldier(rc);
+                        rc.setIndicatorString(String.valueOf(rc.readSharedArray(30)));
                         break;
                     case LABORATORY: // Examplefuncsplayer doesn't use any of these robot types below.
                     case WATCHTOWER: // You might want to give them a try!

@@ -22,7 +22,6 @@ public class Soldier {
     };
 
     static HashMap<Integer, MapLocation> exploreDest = new HashMap<Integer, MapLocation>();
-    static MapLocation archonLocation = null;
 
     /**
      * Run a single turn for a Soldier.
@@ -47,7 +46,13 @@ public class Soldier {
             if (rc.canAttack(loc)) {
                 if (enemy.getType().equals(RobotType.ARCHON)) {
                     rc.attack(loc);
-                    archonLocation = loc;
+
+                    rc.writeSharedArray(30,loc.x);
+                    rc.writeSharedArray(31,loc.y);
+                    if(!rc.canSenseRobotAtLocation(new MapLocation(loc.x,loc.y))){
+                        rc.writeSharedArray(30,0);
+                        rc.writeSharedArray(31,0);
+                    }
                     target = null;
                     break;
                 } else {
@@ -60,17 +65,19 @@ public class Soldier {
             rc.attack(target);
         }
 
+
+
         if (!rc.isMovementReady())
             return;
 
         // move using pathfinder algorithm
-        MapLocation targetLocation = (archonLocation != null) ? archonLocation : exploreDest.get(id);
+        MapLocation targetLocation = (rc.readSharedArray(30) != 0) ? new MapLocation(rc.readSharedArray(30),rc.readSharedArray(31)) : exploreDest.get(id);
 
-        if (targetLocation == rc.getLocation() && archonLocation == null) {
+        if (targetLocation == rc.getLocation() && rc.readSharedArray(30) == 0) {
             exploreDest.put(id, new MapLocation(rng.nextInt(rc.getMapWidth()), rng.nextInt(rc.getMapHeight())));
             targetLocation = exploreDest.get(id);
         }
-
+        System.out.println(targetLocation.toString());
         RobotPlayer.pathfinder(targetLocation, rc);
     }
 }
