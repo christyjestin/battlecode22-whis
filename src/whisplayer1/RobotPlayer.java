@@ -161,4 +161,12 @@ public strictfp class RobotPlayer {
         if (bestMove != null)
             rc.move(bestMove);
     }
+
+    public static void addLeadLocation(MapLocation loc, RobotController rc) throws GameActionException {
+        for(int i = 0; i < 20; i ++){
+            if(Math.abs(loc.x - rc.readSharedArray(i)) )
+        }
+
+
+    }
 }

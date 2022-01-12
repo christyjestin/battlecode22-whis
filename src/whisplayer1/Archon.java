@@ -28,6 +28,29 @@ public strictfp class Archon {
      * per turn.
      */
     static void runArchon(RobotController rc) throws GameActionException {
+        // Try to attack someone
+        int radiusSquared = rc.getType().actionRadiusSquared;
+        MapLocation[] leadDeposit = rc.senseNearbyLocationsWithLead();
+        for (MapLocation lead : leadDeposit) {
+            if (rc.canAttack(loc)) {
+                if (enemy.getType().equals(RobotType.ARCHON)) {
+                    rc.attack(loc);
+
+                    rc.writeSharedArray(30,loc.x);
+                    rc.writeSharedArray(31,loc.y);
+                    if(!rc.canSenseRobotAtLocation(new MapLocation(loc.x,loc.y))){
+                        rc.writeSharedArray(30,0);
+                        rc.writeSharedArray(31,0);
+                    }
+                    target = null;
+                    break;
+                } else {
+                    target = loc;
+                }
+            }
+        }
+
+
         if (center == null)
             center = new MapLocation(rc.getMapWidth() / 2, rc.getMapHeight() / 2);
         // some directions
