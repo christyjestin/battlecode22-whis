@@ -46,7 +46,6 @@ public strictfp class RobotPlayer {
      **/
     @SuppressWarnings("unused")
     public static void run(RobotController rc) throws GameActionException {
-
         // Hello world! Standard output is very useful for debugging.
         // Everything you say here will be directly viewable in your terminal when you run a match!
         System.out.println("I'm a " + rc.getType() + " and I just got created! I have health " + rc.getHealth());
@@ -59,7 +58,7 @@ public strictfp class RobotPlayer {
             // loop. If we ever leave this loop and return from run(), the robot dies! At the end of the
             // loop, we call Clock.yield(), signifying that we've done everything we want to do.
 
-            turnCount += 1;  // We have now been alive for one more turn!
+            turnCount += 1; // We have now been alive for one more turn!
             System.out.println("Age: " + turnCount + "; Location: " + rc.getLocation());
 
             // Try/catch blocks stop unhandled exceptions, which cause your robot to explode.
@@ -69,13 +68,20 @@ public strictfp class RobotPlayer {
                 // use different strategies on different robots. If you wish, you are free to rewrite
                 // this into a different control structure!
                 switch (rc.getType()) {
-                    case ARCHON:     runArchon(rc);  break;
-                    case MINER:      runMiner(rc);   break;
-                    case SOLDIER:    runSoldier(rc); break;
+                    case ARCHON:
+                        runArchon(rc);
+                        break;
+                    case MINER:
+                        runMiner(rc);
+                        break;
+                    case SOLDIER:
+                        runSoldier(rc);
+                        break;
                     case LABORATORY: // Examplefuncsplayer doesn't use any of these robot types below.
                     case WATCHTOWER: // You might want to give them a try!
                     case BUILDER:
-                    case SAGE:       break;
+                    case SAGE:
+                        break;
                 }
             } catch (GameActionException e) {
                 // Oh no! It looks like we did something illegal in the Battlecode world. You should
@@ -83,13 +89,11 @@ public strictfp class RobotPlayer {
                 // world. Remember, uncaught exceptions cause your robot to explode!
                 System.out.println(rc.getType() + " Exception");
                 e.printStackTrace();
-
             } catch (Exception e) {
                 // Oh no! It looks like our code tried to do something bad. This isn't a
                 // GameActionException, so it's more likely to be a bug in our code.
                 System.out.println(rc.getType() + " Exception");
                 e.printStackTrace();
-
             } finally {
                 // Signify we've done everything we want to do, thereby ending our turn.
                 // This will make our code wait until the next turn, and then perform this loop again.
@@ -97,7 +101,6 @@ public strictfp class RobotPlayer {
             }
             // End of loop: go back to the top. Clock.yield() has ended, so it's time for another turn!
         }
-
         // Your code should never reach here (unless it's intentional)! Self-destruction imminent...
     }
 
