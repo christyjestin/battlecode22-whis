@@ -10,7 +10,7 @@ public strictfp class Archon {
      */
     static final Random rng = new Random(6147);
     static int counter = 0;
-    static int ratio = 3;
+    static int ratio = 2;
     /**
      * Array containing all the possible movement directions.
      */
@@ -81,7 +81,7 @@ public strictfp class Archon {
         if (rc.getHealth() < (RobotType.ARCHON.getMaxHealth(1) - 5) || nearbyEnemy.length > 0) {
             ratio = 0;
         }else if(RobotPlayer.archonDetected(rc)){
-            ratio = 2;
+            ratio = 1;
         }
         // implement danger mode until threat is gone
         //decrease ratio based on tuyrn count
