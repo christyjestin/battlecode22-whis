@@ -29,23 +29,21 @@ public strictfp class Miner {
 
     static final int visionRadiusSquared = RobotType.MINER.visionRadiusSquared;
     static final int actionRadiusSquared = RobotType.MINER.actionRadiusSquared;
-    static int mapHeight = 0;
-    static int mapWidth = 0;
+    static int mapHeight = -1;
+    static int mapWidth = -1;
+    static Team opponent = null;
+    static boolean reportedDeath = false;
 
-    // bool indicating whether the miner is assigned to watch lead deposits near
-    // archons
+    // bool indicating whether the miner is assigned to watch lead deposits near archons
     static Boolean archonDeposit = null;
 
     static double halfGridLength = -1;
 
+    // algorithm to randomly generate a location on grid based on miner's vision radius
     static MapLocation generateLocation(RobotController rc) throws GameActionException {
         // one square on our grid should be the same size as the inscribed square in the
         // vision radius circle
-        if (halfGridLength == -1) {
-            halfGridLength = Math.sqrt(visionRadiusSquared / 2.0);
-        }
-        if (mapHeight == 0) mapHeight = rc.getMapHeight();
-        if (mapWidth == 0) mapWidth = rc.getMapWidth();
+        if (halfGridLength == -1) halfGridLength = Math.sqrt(visionRadiusSquared / 2.0);
 
         double fullGridLength = 2.0 * halfGridLength;
         // number of squares to fill the map along each dimension
@@ -66,18 +64,25 @@ public strictfp class Miner {
      * per turn.
      */
     static void runMiner(RobotController rc) throws GameActionException {
-        if (rc.getHealth() < 10) {
+        // report likely miner death
+        if (rc.getHealth() < 4 && !reportedDeath) {
             RobotPlayer.decrementArray(rc, RobotPlayer.minerCountIndex);
+            reportedDeath = true;
         }
+
         // init code
-        if (archonDeposit == null) {
-            archonDeposit = rc.readSharedArray(RobotPlayer.minerCountIndex) < (6 * rc.getArchonCount());
-            RobotPlayer.incrementArray(rc, RobotPlayer.minerCountIndex);
+        if (mapHeight == -1) mapHeight = rc.getMapHeight();
+        if (mapWidth == -1) mapWidth = rc.getMapWidth();
+        if (opponent == null) opponent = rc.getTeam().opponent();
+        // assign first couple miners to monitor deposits near archons
+        if (archonDeposit == null) archonDeposit =
+            rc.readSharedArray(RobotPlayer.minerCountIndex) < (3 * rc.getArchonCount());
+        if (destination == null) {
+            destination =
+                archonDeposit
+                    ? RobotPlayer.retrieveLocationfromArray(rc, rng.nextInt(rc.getArchonCount()))
+                    : generateLocation(rc);
         }
-        if (destination == null) destination =
-            archonDeposit
-                ? RobotPlayer.retrieveLocationfromArray(rc, rng.nextInt(rc.getArchonCount()))
-                : generateLocation(rc);
 
         // Try to mine on squares around us.
         MapLocation me = rc.getLocation();
@@ -118,22 +123,16 @@ public strictfp class Miner {
             }
         }
 
-        Team opponent = rc.getTeam().opponent();
         RobotInfo[] enemies = rc.senseNearbyRobots(visionRadiusSquared, opponent);
         for (RobotInfo enemy : enemies) {
-            MapLocation loc = enemy.getLocation();
-            if (enemy.getType().equals(RobotType.ARCHON)) {
-                RobotPlayer.addEnemyArchon(loc, rc);
-            }
+            if (enemy.getType().equals(RobotType.ARCHON)) RobotPlayer.addEnemyArchon(rc, enemy.getLocation());
         }
 
         // move using pathfinder algorithm
         if (targetLocation == null) {
-            // randomly generate a new destination if you're already there
-            // and you aren't assigned to watch deposits near archons
-            if (destination.equals(rc.getLocation()) && !archonDeposit) {
-                destination = generateLocation(rc);
-            }
+            // randomly generate a new destination if you're already there and you aren't assigned to watch
+            // deposits near archons
+            if (destination.equals(rc.getLocation()) && !archonDeposit) destination = generateLocation(rc);
             targetLocation = destination;
         }
 

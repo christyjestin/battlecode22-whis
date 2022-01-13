@@ -23,6 +23,10 @@ public class Soldier {
     static MapLocation targetLocation = null;
     static int visionRadiusSquared = RobotType.SOLDIER.visionRadiusSquared;
     static int actionRadiusSquared = RobotType.SOLDIER.actionRadiusSquared;
+    static int mapWidth = -1;
+    static int mapHeight = -1;
+    static Team opponent = null;
+    static boolean reportedDeath = false;
 
     /**
      * Run a single turn for a Soldier.
@@ -30,25 +34,28 @@ public class Soldier {
      * per turn.
      */
     public static void runSoldier(RobotController rc) throws GameActionException {
-        if (rc.getHealth() < 10) RobotPlayer.decrementArray(rc, RobotPlayer.soldierCountIndex);
+        // report likely soldier death
+        if (rc.getHealth() < 4 && !reportedDeath) {
+            RobotPlayer.decrementArray(rc, RobotPlayer.soldierCountIndex);
+            reportedDeath = true;
+        }
 
         if (!rc.isActionReady() && !rc.isMovementReady()) return;
 
         // init code
-        if (exploreDest == null) {
-            exploreDest = new MapLocation(rng.nextInt(rc.getMapWidth()), rng.nextInt(rc.getMapHeight()));
-            RobotPlayer.incrementArray(rc, RobotPlayer.soldierCountIndex);
-        }
+        if (mapWidth == -1) mapWidth = rc.getMapWidth();
+        if (mapHeight == -1) mapHeight = rc.getMapHeight();
+        if (opponent == null) opponent = rc.getTeam().opponent();
+        if (exploreDest == null) exploreDest = new MapLocation(rng.nextInt(mapWidth), rng.nextInt(mapHeight));
 
         // Try to attack someone
-        Team opponent = rc.getTeam().opponent();
         RobotInfo[] enemies = rc.senseNearbyRobots(actionRadiusSquared, opponent);
         MapLocation target = null;
         for (RobotInfo enemy : enemies) {
             MapLocation loc = enemy.getLocation();
             if (rc.canAttack(loc)) {
                 if (enemy.getType().equals(RobotType.ARCHON)) {
-                    RobotPlayer.addEnemyArchon(loc, rc);
+                    RobotPlayer.addEnemyArchon(rc, loc);
                     rc.attack(loc);
                     target = null;
                     break;
