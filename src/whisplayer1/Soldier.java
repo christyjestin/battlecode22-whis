@@ -65,7 +65,8 @@ public class Soldier {
     if (!rc.isMovementReady()) return;
 
     // move using pathfinder algorithm
-    if (targetLocation == rc.getLocation()) {
+    targetLocation = exploreDest;
+    if (targetLocation.equals(rc.getLocation())) {
       exploreDest =
         new MapLocation(
           rng.nextInt(rc.getMapWidth()),
@@ -73,6 +74,7 @@ public class Soldier {
         );
       targetLocation = exploreDest;
     }
+
     for (int i = 60; i < 64; i++) {
       if (rc.readSharedArray(i) != 0) {
         targetLocation =
