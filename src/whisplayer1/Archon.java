@@ -25,7 +25,6 @@ public strictfp class Archon {
   };
 
   static MapLocation center = null;
-  static int minerCount = 0;
   static boolean writtenToSharedArray = false;
 
   /**
@@ -52,21 +51,18 @@ public strictfp class Archon {
     Direction towardsCenter = rc.getLocation().directionTo(center);
     Direction towardsRight = towardsCenter.rotateRight();
     Direction towardsLeft = towardsCenter.rotateLeft();
-    while (true) {
-      int random = rng.nextInt(3);
-      Direction dir = random == 0
-        ? towardsRight
-        : (random == 1 ? towardsCenter : towardsLeft);
-      if (minerCount < 100 && rng.nextBoolean()) {
-        // spawn both miners and soldiers
-        if (rc.canBuildRobot(RobotType.MINER, dir)) {
-          rc.buildRobot(RobotType.MINER, dir);
-          minerCount++;
-        }
-      } else {
-        if (rc.canBuildRobot(RobotType.SOLDIER, dir)) {
-          rc.buildRobot(RobotType.SOLDIER, dir);
-        }
+    Direction[] centerDirections = { towardsRight, towardsCenter, towardsLeft };
+    Direction dir = centerDirections[rng.nextInt(centerDirections.length)];
+    // stop early
+    if (rc.getRobotCount() > (rc.getMapHeight() * rc.getMapWidth() / 3)) return;
+    if (rng.nextBoolean()) {
+      // spawn both miners and soldiers
+      if (rc.canBuildRobot(RobotType.MINER, dir)) {
+        rc.buildRobot(RobotType.MINER, dir);
+      }
+    } else {
+      if (rc.canBuildRobot(RobotType.SOLDIER, dir)) {
+        rc.buildRobot(RobotType.SOLDIER, dir);
       }
     }
   }
