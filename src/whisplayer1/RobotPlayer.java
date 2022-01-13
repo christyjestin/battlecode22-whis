@@ -90,8 +90,9 @@ public strictfp class RobotPlayer {
                 // this into a different control structure!
                 rc.setIndicatorString(rc.readSharedArray(60) + " "
                         + rc.readSharedArray(61) + " " +
-                        rc.readSharedArray(62) +" " +
-                        rc.readSharedArray(63));
+                        rc.readSharedArray(62) + " " +
+                        rc.readSharedArray(63) + " " +
+                        rc.readSharedArray(30));
                 switch (rc.getType()) {
 
                     case ARCHON:
@@ -167,20 +168,29 @@ public strictfp class RobotPlayer {
             rc.move(bestMove);
     }
 
-    public static int addEnemyArchon(MapLocation loc, RobotController rc) throws GameActionException{
+    public static void addEnemyArchon(MapLocation loc, RobotController rc) throws GameActionException {
         int convertLocation = loc.x * 100 + loc.y;
-        for(int i = 63; i >= 60 ; i --){
-            if(convertLocation == rc.readSharedArray(i)){
-                return i;
+        for (int i = 63; i >= 60; i--) {
+            if (convertLocation == rc.readSharedArray(i)) {
+                return;
             }
         }
-        for(int i = 63; i >= 60 ; i --){
-            if(0 == rc.readSharedArray(i)){
-                rc.writeSharedArray(i,convertLocation);
-                break;
+        for (int i = 63; i >= 60; i--) {
+            if (0 == rc.readSharedArray(i)) {
+                rc.writeSharedArray(i, convertLocation);
+                return;
             }
         }
-        return -1;
+    }
+
+    public static void checkRemoveArchon(RobotController rc) throws GameActionException {
+        for (int i = 63; i >= 60; i--) {
+            MapLocation a = new MapLocation(rc.readSharedArray(i) / 100, rc.readSharedArray(i) % 100);
+            if (rc.canSenseLocation(a)) {
+                if (!(rc.canSenseRobotAtLocation(a) && rc.senseRobotAtLocation(a).getType() == RobotType.ARCHON))
+                    rc.writeSharedArray(i, 0);
+            }
+        }
     }
 
 }

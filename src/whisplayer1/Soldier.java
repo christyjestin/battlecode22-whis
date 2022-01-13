@@ -23,6 +23,7 @@ public class Soldier {
 
     static HashMap<Integer, MapLocation> exploreDest = new HashMap<Integer, MapLocation>();
     static MapLocation targetLocation = null;
+
     /**
      * Run a single turn for a Soldier.
      * This code is wrapped inside the infinite loop in run(), so it is called once
@@ -48,10 +49,6 @@ public class Soldier {
                 if (enemy.getType().equals(RobotType.ARCHON)) {
                     RobotPlayer.addEnemyArchon(loc, rc);
                     rc.attack(loc);
-                    if(!rc.canSenseRobotAtLocation(loc)){
-                        int a =RobotPlayer.addEnemyArchon(loc, rc);
-                        rc.writeSharedArray(a,-1);
-                    }
                     target = null;
                     break;
                 } else {
@@ -59,6 +56,10 @@ public class Soldier {
                 }
             }
         }
+
+        RobotPlayer.checkRemoveArchon(rc);
+
+
 
         if (target != null) {
             rc.attack(target);
@@ -68,13 +69,13 @@ public class Soldier {
             return;
 
         // move using pathfinder algorithm
-        if(targetLocation == null){
+        if (targetLocation == null) {
             exploreDest.put(id, new MapLocation(rng.nextInt(rc.getMapWidth()), rng.nextInt(rc.getMapHeight())));
             targetLocation = exploreDest.get(id);
         }
-        for(int i = 60; i < 64; i ++){
-            if(rc.readSharedArray(i) != 0 || rc.readSharedArray(i)!=-1){
-                targetLocation = new MapLocation(rc.readSharedArray(i)/100, rc.readSharedArray(i)%100);
+        for (int i = 60; i < 64; i++) {
+            if (rc.readSharedArray(i) != 0) {
+                targetLocation = new MapLocation(rc.readSharedArray(i) / 100, rc.readSharedArray(i) % 100);
             }
         }
 

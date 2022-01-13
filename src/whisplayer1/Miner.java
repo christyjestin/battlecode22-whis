@@ -79,7 +79,7 @@ public strictfp class Miner {
       }
     }
 
-    int radiusSquared = rc.getType().actionRadiusSquared;
+    int radiusSquared = rc.getType().visionRadiusSquared;
     Team opponent = rc.getTeam().opponent();
     RobotInfo[] enemies = rc.senseNearbyRobots(radiusSquared, opponent);
     for (RobotInfo enemy : enemies) {
