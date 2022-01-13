@@ -2,7 +2,6 @@ package whisplayer1;
 
 import battlecode.common.*;
 import java.util.Random;
-import java.util.HashMap;
 
 public strictfp class Miner {
     /** A random number generator. */
@@ -20,7 +19,10 @@ public strictfp class Miner {
             Direction.NORTHWEST,
     };
 
-    static HashMap<Integer, MapLocation> destinations = new HashMap<Integer, MapLocation>();
+    static MapLocation destination = null;
+
+    static final int visionRadiusSquared = RobotType.MINER.visionRadiusSquared;
+    static final int actionRadiusSquared = RobotType.MINER.actionRadiusSquared;
 
     /**
      * Run a single turn for a Miner.
@@ -28,9 +30,8 @@ public strictfp class Miner {
      * per turn.
      */
     static void runMiner(RobotController rc) throws GameActionException {
-        final int id = rc.getID();
-        if (!destinations.containsKey(id))
-            destinations.put(id, new MapLocation(rng.nextInt(rc.getMapWidth()), rng.nextInt(rc.getMapHeight())));
+        if (destination == null)
+            destination = new MapLocation(rng.nextInt(rc.getMapWidth()), rng.nextInt(rc.getMapHeight()));
 
         // Try to mine on squares around us.
         MapLocation me = rc.getLocation();
@@ -52,8 +53,7 @@ public strictfp class Miner {
         if (!rc.isMovementReady())
             return;
 
-        int visionRadius = rc.getType().visionRadiusSquared;
-        MapLocation[] nearbyLocations = rc.getAllLocationsWithinRadiusSquared(me, visionRadius);
+        MapLocation[] nearbyLocations = rc.getAllLocationsWithinRadiusSquared(me, visionRadiusSquared);
 
         MapLocation targetLocation = null;
         int targetScore = -3600;
@@ -74,21 +74,25 @@ public strictfp class Miner {
             }
         }
 
-        int radiusSquared = rc.getType().actionRadiusSquared;
         Team opponent = rc.getTeam().opponent();
-        RobotInfo[] enemies = rc.senseNearbyRobots(radiusSquared, opponent);
+        RobotInfo[] enemies = rc.senseNearbyRobots(visionRadiusSquared, opponent);
         for (RobotInfo enemy : enemies) {
             MapLocation loc = enemy.getLocation();
-                if (enemy.getType().equals(RobotType.ARCHON)) {
-                    rc.writeSharedArray(30, loc.x);
-                    rc.writeSharedArray(31, loc.y);
-                    break;
-                }
+            if (enemy.getType().equals(RobotType.ARCHON)) {
+                rc.writeSharedArray(30, loc.x);
+                rc.writeSharedArray(31, loc.y);
+                break;
+            }
         }
 
         // move using pathfinder algorithm
-        if (targetLocation == null)
-            targetLocation = destinations.get(id);
+        if (targetLocation == null) {
+            // randomly generate a new destination if you're already there
+            if (destination.equals(rc.getLocation()))
+                destination = new MapLocation(rng.nextInt(rc.getMapWidth()), rng.nextInt(rc.getMapHeight()));
+            targetLocation = destination;
+        }
+
         RobotPlayer.pathfinder(targetLocation, rc);
     }
 }
