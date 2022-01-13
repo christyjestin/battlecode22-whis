@@ -162,11 +162,19 @@ public strictfp class RobotPlayer {
             rc.move(bestMove);
     }
 
-    public static void addLeadLocation(MapLocation loc, RobotController rc) throws GameActionException {
-        for(int i = 0; i < 20; i ++){
-            if(Math.abs(loc.x - rc.readSharedArray(i)) )
+    public static int addEnemyArchon(MapLocation loc, RobotController rc) throws GameActionException{
+        int convertLocation = loc.x * 100 + loc.y;
+        for(int i = 64; i > 60 ; i --){
+            if(convertLocation == rc.readSharedArray(i)){
+                return i;
+            }
         }
-
-
+        for(int i = 64; i > 60 ; i --){
+            if(0 == rc.readSharedArray(i)){
+                rc.writeSharedArray(i,convertLocation);
+            }
+        }
+        return -1;
     }
+
 }

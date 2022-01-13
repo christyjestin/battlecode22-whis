@@ -80,9 +80,7 @@ public strictfp class Miner {
         for (RobotInfo enemy : enemies) {
             MapLocation loc = enemy.getLocation();
                 if (enemy.getType().equals(RobotType.ARCHON)) {
-                    rc.writeSharedArray(30, loc.x);
-                    rc.writeSharedArray(31, loc.y);
-                    break;
+                    RobotPlayer.addEnemyArchon(loc, rc);
                 }
         }
 

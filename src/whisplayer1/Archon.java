@@ -21,34 +21,24 @@ public strictfp class Archon {
 
     static MapLocation center = null;
     static int minerCount = 0;
-
+    static boolean writtenToSharedArray = false;
     /**
      * Run a single turn for an Archon.
      * This code is wrapped inside the infinite loop in run(), so it is called once
      * per turn.
      */
     static void runArchon(RobotController rc) throws GameActionException {
-        // Try to attack someone
-        int radiusSquared = rc.getType().actionRadiusSquared;
         MapLocation[] leadDeposit = rc.senseNearbyLocationsWithLead();
-        for (MapLocation lead : leadDeposit) {
-            if (rc.canAttack(loc)) {
-                if (enemy.getType().equals(RobotType.ARCHON)) {
-                    rc.attack(loc);
 
-                    rc.writeSharedArray(30,loc.x);
-                    rc.writeSharedArray(31,loc.y);
-                    if(!rc.canSenseRobotAtLocation(new MapLocation(loc.x,loc.y))){
-                        rc.writeSharedArray(30,0);
-                        rc.writeSharedArray(31,0);
-                    }
-                    target = null;
-                    break;
-                } else {
-                    target = loc;
+        if(!writtenToSharedArray){
+            for(int i = 0; i < rc.getArchonCount(); i++){
+                if(rc.readSharedArray(i)==0){
+                    rc.writeSharedArray(leadDeposit[0].x*100 + leadDeposit[0].y,i);
+                    writtenToSharedArray = false;
                 }
             }
         }
+
 
 
         if (center == null)
