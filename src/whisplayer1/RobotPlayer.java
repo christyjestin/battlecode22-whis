@@ -233,4 +233,15 @@ public strictfp class RobotPlayer {
     public static void decrementArray(RobotController rc, int index) throws GameActionException {
         rc.writeSharedArray(index, rc.readSharedArray(index) - 1);
     }
+
+    public static boolean archonDetected(RobotController rc) throws GameActionException {
+        for(int i = 60; i <64; i ++){
+            if(rc.readSharedArray(i) > 0){
+                return true;
+            }
+
+        }
+
+        return false;
+    }
 }

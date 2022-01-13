@@ -10,7 +10,7 @@ public strictfp class Archon {
      */
     static final Random rng = new Random(6147);
     static int counter = 0;
-    static int ratio = 7;
+    static int ratio = 3;
     /**
      * Array containing all the possible movement directions.
      */
@@ -55,15 +55,18 @@ public strictfp class Archon {
         Direction dir = centerDirections[rng.nextInt(centerDirections.length)];
         // stop early
         if (rc.getRobotCount() > (rc.getMapHeight() * rc.getMapWidth() / 3)) return;
-        if ((counter % 10) < ratio) {
+        if ((counter % 5) < ratio) {
             // spawn both miners and soldiers
             if (rc.canBuildRobot(RobotType.MINER, dir)) {
                 rc.buildRobot(RobotType.MINER, dir);
                 rc.writeSharedArray(RobotPlayer.minerCountIndex, rc.readSharedArray(RobotPlayer.minerCountIndex) + 1);
                 counter++;
             }
-        } else {
-            if (rc.canBuildRobot(RobotType.SOLDIER, dir)) {
+        }
+
+        if ((counter % 5) >= ratio) {
+
+            if (rc.canBuildRobot(RobotType.SOLDIER, dir))
                 rc.buildRobot(RobotType.SOLDIER, dir);
                 rc.writeSharedArray(
                     RobotPlayer.soldierCountIndex,
@@ -71,12 +74,14 @@ public strictfp class Archon {
                 );
                 counter++;
             }
-        }
+
 
         RobotInfo[] nearbyEnemy = rc.senseNearbyRobots(RobotType.ARCHON.visionRadiusSquared, rc.getTeam().opponent());
 
-        if (rc.getHealth() < (RobotType.ARCHON.getMaxHealth(0) - 5) || nearbyEnemy.length > 0) {
-            ratio = 4;
+        if (rc.getHealth() < (RobotType.ARCHON.getMaxHealth(1) - 5) || nearbyEnemy.length > 0) {
+            ratio = 0;
+        }else if(RobotPlayer.archonDetected(rc)){
+            ratio = 2;
         }
         // implement danger mode until threat is gone
         //decrease ratio based on tuyrn count
@@ -84,5 +89,6 @@ public strictfp class Archon {
         if (ratio < 0) {
             ratio = 0;
         }
+        rc.writeSharedArray(30,ratio);
     }
 }
