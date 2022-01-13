@@ -3,7 +3,6 @@ package whisplayer1;
 import battlecode.common.*;
 
 import java.util.Random;
-import java.util.HashMap;
 
 public strictfp class Miner {
   /**
@@ -25,17 +24,19 @@ public strictfp class Miner {
           Direction.NORTHWEST,
   };
 
-  static HashMap<Integer, MapLocation> destinations = new HashMap<Integer, MapLocation>();
+    static MapLocation destination = null;
 
-  /**
-   * Run a single turn for a Miner.
-   * This code is wrapped inside the infinite loop in run(), so it is called once
-   * per turn.
-   */
-  static void runMiner(RobotController rc) throws GameActionException {
-    final int id = rc.getID();
-    if (!destinations.containsKey(id))
-      destinations.put(id, new MapLocation(rng.nextInt(rc.getMapWidth()), rng.nextInt(rc.getMapHeight())));
+    static final int visionRadiusSquared = RobotType.MINER.visionRadiusSquared;
+    static final int actionRadiusSquared = RobotType.MINER.actionRadiusSquared;
+
+    /**
+     * Run a single turn for a Miner.
+     * This code is wrapped inside the infinite loop in run(), so it is called once
+     * per turn.
+     */
+    static void runMiner(RobotController rc) throws GameActionException {
+        if (destination == null)
+            destination = new MapLocation(rng.nextInt(rc.getMapWidth()), rng.nextInt(rc.getMapHeight()));
 
     // Try to mine on squares around us.
     MapLocation me = rc.getLocation();
@@ -57,8 +58,7 @@ public strictfp class Miner {
     if (!rc.isMovementReady())
       return;
 
-    int visionRadius = rc.getType().visionRadiusSquared;
-    MapLocation[] nearbyLocations = rc.getAllLocationsWithinRadiusSquared(me, visionRadius);
+    MapLocation[] nearbyLocations = rc.getAllLocationsWithinRadiusSquared(me, visionRadiusSquared);
 
     MapLocation targetLocation = null;
     int targetScore = -3600;
@@ -68,30 +68,45 @@ public strictfp class Miner {
       if (rc.senseRobotAtLocation(tryLocation) != null)
         continue;
 
-      int gold = rc.senseGold(tryLocation);
-      int lead = rc.senseLead(tryLocation);
-      if (gold > 0 || lead > 1) {
-        int score = 100 * gold + 10 * lead - me.distanceSquaredTo(tryLocation);
-        if (score > targetScore) {
-          targetLocation = tryLocation;
-          targetScore = score;
+            int gold = rc.senseGold(tryLocation);
+            int lead = rc.senseLead(tryLocation);
+            if (gold > 0 || lead > 1) {
+                int score = 100 * gold + 10 * lead - me.distanceSquaredTo(tryLocation);
+                if (score > targetScore) {
+                    targetLocation = tryLocation;
+                    targetScore = score;
+                }
+            }
+        }
+
+        Team opponent = rc.getTeam().opponent();
+        RobotInfo[] enemies = rc.senseNearbyRobots(visionRadiusSquared, opponent);
+        for (RobotInfo enemy : enemies) {
+            MapLocation loc = enemy.getLocation();
+            if (enemy.getType().equals(RobotType.ARCHON)) {
+                rc.writeSharedArray(30, loc.x);
+                rc.writeSharedArray(31, loc.y);
+                break;
+            }
         }
       }
     }
 
-    int radiusSquared = rc.getType().visionRadiusSquared;
     Team opponent = rc.getTeam().opponent();
-    RobotInfo[] enemies = rc.senseNearbyRobots(radiusSquared, opponent);
+    RobotInfo[] enemies = rc.senseNearbyRobots(visionRadiusSquared, opponent);
     for (RobotInfo enemy : enemies) {
       MapLocation loc = enemy.getLocation();
       if (enemy.getType().equals(RobotType.ARCHON)) {
         RobotPlayer.addEnemyArchon(loc, rc);
       }
-    }
+        // move using pathfinder algorithm
+        if (targetLocation == null) {
+            // randomly generate a new destination if you're already there
+            if (destination.equals(rc.getLocation()))
+                destination = new MapLocation(rng.nextInt(rc.getMapWidth()), rng.nextInt(rc.getMapHeight()));
+            targetLocation = destination;
+        }
 
-    // move using pathfinder algorithm
-    if (targetLocation == null)
-      targetLocation = destinations.get(id);
-    RobotPlayer.pathfinder(targetLocation, rc);
+        RobotPlayer.pathfinder(targetLocation, rc);
   }
 }

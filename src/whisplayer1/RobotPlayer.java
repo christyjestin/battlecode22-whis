@@ -141,6 +141,8 @@ public strictfp class RobotPlayer {
 
     public static void pathfinder(MapLocation targetLocation, RobotController rc) throws GameActionException {
         Direction targetDirection = rc.getLocation().directionTo(targetLocation);
+        if (targetDirection.equals(Direction.CENTER))
+            return;
         Direction[] possibleMoves = {
                 targetDirection.rotateLeft().rotateLeft(),
                 targetDirection.rotateLeft(),
@@ -157,15 +159,36 @@ public strictfp class RobotPlayer {
                     bestMove = possibleMoves[i];
                     break;
                 }
-                int score = -10 * Math.abs(i - 2) - rc.senseRubble(rc.adjacentLocation(possibleMoves[i]));
+                int score = -20 * Math.abs(i - 2) - rc.senseRubble(rc.adjacentLocation(possibleMoves[i]));
                 if (score > bestScore) {
                     bestMove = possibleMoves[i];
                     bestScore = score;
                 }
             }
         }
-        if (bestMove != null)
+        if (bestMove != null) {
             rc.move(bestMove);
+        } else {
+            Direction oppositeDirection = targetDirection.opposite();
+            Direction[] backupMoves = {
+                    oppositeDirection.rotateLeft(),
+                    oppositeDirection,
+                    oppositeDirection.rotateRight(),
+            };
+            Direction bestBackupMove = null;
+            int bestBackupScore = -500;
+            for (int i = 0; i < backupMoves.length; i++) {
+                if (rc.canMove(backupMoves[i])) {
+                    int score = 20 * Math.abs(i - 1) - rc.senseRubble(rc.adjacentLocation(backupMoves[i]));
+                    if (score > bestBackupScore) {
+                        bestBackupMove = backupMoves[i];
+                        bestBackupScore = score;
+                    }
+                }
+            }
+            if (bestBackupMove != null)
+                rc.move(bestBackupMove);
+        }
     }
 
     public static void addEnemyArchon(MapLocation loc, RobotController rc) throws GameActionException {

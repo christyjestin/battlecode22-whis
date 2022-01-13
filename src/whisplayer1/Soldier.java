@@ -1,8 +1,6 @@
 package whisplayer1;
 
 import battlecode.common.*;
-
-import java.util.HashMap;
 import java.util.Random;
 
 public class Soldier {
@@ -21,8 +19,9 @@ public class Soldier {
             Direction.NORTHWEST,
     };
 
-    static HashMap<Integer, MapLocation> exploreDest = new HashMap<Integer, MapLocation>();
-    static MapLocation targetLocation = null;
+    static MapLocation exploreDest = null;
+    static int visionRadiusSquared = RobotType.SOLDIER.visionRadiusSquared;
+    static int actionRadiusSquared = RobotType.SOLDIER.actionRadiusSquared;
 
     /**
      * Run a single turn for a Soldier.
@@ -34,14 +33,12 @@ public class Soldier {
         if (!rc.isActionReady() && !rc.isMovementReady())
             return;
 
-        final int id = rc.getID();
-        if (!exploreDest.containsKey(id))
-            exploreDest.put(id, new MapLocation(rng.nextInt(rc.getMapWidth()), rng.nextInt(rc.getMapHeight())));
+        if (exploreDest == null)
+            exploreDest = new MapLocation(rng.nextInt(rc.getMapWidth()), rng.nextInt(rc.getMapHeight()));
 
         // Try to attack someone
-        int radiusSquared = rc.getType().actionRadiusSquared;
         Team opponent = rc.getTeam().opponent();
-        RobotInfo[] enemies = rc.senseNearbyRobots(radiusSquared, opponent);
+        RobotInfo[] enemies = rc.senseNearbyRobots(actionRadiusSquared, opponent);
         MapLocation target = null;
         for (RobotInfo enemy : enemies) {
             MapLocation loc = enemy.getLocation();
@@ -69,9 +66,9 @@ public class Soldier {
             return;
 
         // move using pathfinder algorithm
-        if (targetLocation == null) {
-            exploreDest.put(id, new MapLocation(rng.nextInt(rc.getMapWidth()), rng.nextInt(rc.getMapHeight())));
-            targetLocation = exploreDest.get(id);
+        if (targetLocation == rc.getLocation()) {
+            exploreDest = new MapLocation(rng.nextInt(rc.getMapWidth()), rng.nextInt(rc.getMapHeight()));
+            targetLocation = exploreDest;
         }
         for (int i = 60; i < 64; i++) {
             if (rc.readSharedArray(i) != 0) {
