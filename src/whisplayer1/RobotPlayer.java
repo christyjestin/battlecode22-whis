@@ -164,12 +164,12 @@ public strictfp class RobotPlayer {
 
     public static int addEnemyArchon(MapLocation loc, RobotController rc) throws GameActionException{
         int convertLocation = loc.x * 100 + loc.y;
-        for(int i = 64; i > 60 ; i --){
+        for(int i = 63; i >= 60 ; i --){
             if(convertLocation == rc.readSharedArray(i)){
                 return i;
             }
         }
-        for(int i = 64; i > 60 ; i --){
+        for(int i = 63; i >= 60 ; i --){
             if(0 == rc.readSharedArray(i)){
                 rc.writeSharedArray(i,convertLocation);
             }

@@ -71,7 +71,7 @@ public class Soldier {
             exploreDest.put(id, new MapLocation(rng.nextInt(rc.getMapWidth()), rng.nextInt(rc.getMapHeight())));
             targetLocation = exploreDest.get(id);
         }
-        for(int i = 61; i < 64; i ++){
+        for(int i = 60; i < 64; i ++){
             if(rc.readSharedArray(i) != 0 || rc.readSharedArray(i)!=-1){
                 targetLocation = new MapLocation(rc.readSharedArray(i)/100, rc.readSharedArray(i)%100);
             }
