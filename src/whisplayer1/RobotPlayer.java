@@ -88,7 +88,12 @@ public strictfp class RobotPlayer {
                 // use different strategies on different robots. If you wish, you are free to
                 // rewrite
                 // this into a different control structure!
+                rc.setIndicatorString(rc.readSharedArray(60) + " "
+                        + rc.readSharedArray(61) + " " +
+                        rc.readSharedArray(62) +" " +
+                        rc.readSharedArray(63));
                 switch (rc.getType()) {
+
                     case ARCHON:
                         Archon.runArchon(rc);
                         break;
@@ -97,13 +102,13 @@ public strictfp class RobotPlayer {
                         break;
                     case SOLDIER:
                         Soldier.runSoldier(rc);
-                        rc.setIndicatorString(String.valueOf(rc.readSharedArray(30)));
                         break;
                     case LABORATORY: // Examplefuncsplayer doesn't use any of these robot types below.
                     case WATCHTOWER: // You might want to give them a try!
                     case BUILDER:
                     case SAGE:
                         break;
+
                 }
             } catch (GameActionException e) {
                 // Oh no! It looks like we did something illegal in the Battlecode world. You
@@ -172,6 +177,7 @@ public strictfp class RobotPlayer {
         for(int i = 63; i >= 60 ; i --){
             if(0 == rc.readSharedArray(i)){
                 rc.writeSharedArray(i,convertLocation);
+                break;
             }
         }
         return -1;

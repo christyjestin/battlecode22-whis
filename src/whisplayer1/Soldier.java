@@ -46,9 +46,10 @@ public class Soldier {
             MapLocation loc = enemy.getLocation();
             if (rc.canAttack(loc)) {
                 if (enemy.getType().equals(RobotType.ARCHON)) {
+                    RobotPlayer.addEnemyArchon(loc, rc);
                     rc.attack(loc);
-                    int a =RobotPlayer.addEnemyArchon(loc, rc);
-                    if(!rc.canSenseRobotAtLocation(new MapLocation(loc.x,loc.y))){
+                    if(!rc.canSenseRobotAtLocation(loc)){
+                        int a =RobotPlayer.addEnemyArchon(loc, rc);
                         rc.writeSharedArray(a,-1);
                     }
                     target = null;
