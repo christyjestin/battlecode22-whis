@@ -100,24 +100,33 @@ public strictfp class Archon {
         if (rc.getRobotCount() > (rc.getMapHeight() * rc.getMapWidth() / 3)) return;
 
         // spawn both miners and soldiers in a dynamic ratio
-        RobotType spawnType = (spawnCounter % 10) < ratio ? RobotType.MINER : RobotType.SOLDIER;
-        int countIndex = (spawnCounter % 10) < ratio ? RobotPlayer.minerCountIndex : RobotPlayer.soldierCountIndex;
-        if (rc.canBuildRobot(spawnType, dir)) {
-            rc.buildRobot(spawnType, dir);
-            RobotPlayer.incrementArray(rc, countIndex);
-            spawnCounter++;
-        }
-
         RobotInfo[] nearbyEnemies = rc.senseNearbyRobots(visionRadiusSquared, rc.getTeam().opponent());
         if (minArchonHealth(rc) < RobotType.ARCHON.getMaxHealth(1) || nearbyEnemies.length > 0) {
             // only spawn soldiers
             ratio = 0;
         } else if (RobotPlayer.enemyArchonDetected(rc)) {
-            // spawn 20% miners, 80% soldiers
-            ratio = 2;
+            // spawn 30% miners, 70% soldiers
+            ratio = 3;
         } else {
             // normal state: 50% miners, 50% soldiers
-            ratio = 5;
+            int numMiners = rc.readSharedArray(RobotPlayer.minerCountIndex);
+            int numSoldiers = rc.readSharedArray(RobotPlayer.soldierCountIndex);
+            int total = numMiners + numSoldiers;
+            // if we don't have any robots, spawn only miners
+            // otherwise spawn them such that we move closer to having 50/50
+            ratio = (total > 0) ? (10 * numSoldiers / total) : 10;
+        }
+        rc.setIndicatorString(ratio + "");
+
+        // stop early if you can't spawn
+        if (!rc.isActionReady()) return;
+
+        int randomInt = rng.nextInt(10);
+        RobotType spawnType = randomInt < ratio ? RobotType.MINER : RobotType.SOLDIER;
+        int countIndex = randomInt < ratio ? RobotPlayer.minerCountIndex : RobotPlayer.soldierCountIndex;
+        if (rc.canBuildRobot(spawnType, dir)) {
+            rc.buildRobot(spawnType, dir);
+            RobotPlayer.incrementArray(rc, countIndex);
         }
     }
 }

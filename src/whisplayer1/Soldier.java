@@ -30,6 +30,12 @@ public class Soldier {
     static Boolean defenseMode = null;
     static MapLocation defendingLocation = null;
 
+    static MapLocation randomLocation(RobotController rc) throws GameActionException {
+        if (mapHeight == -1) mapHeight = rc.getMapHeight();
+        if (mapWidth == -1) mapWidth = rc.getMapWidth();
+        return new MapLocation(rng.nextInt(mapWidth), rng.nextInt(mapHeight));
+    }
+
     static boolean isArchonAtLocation(RobotController rc, MapLocation loc) throws GameActionException {
         return rc.canSenseRobotAtLocation(loc) && rc.senseRobotAtLocation(defendingLocation).type == RobotType.ARCHON;
     }
@@ -76,7 +82,7 @@ public class Soldier {
         if (mapWidth == -1) mapWidth = rc.getMapWidth();
         if (mapHeight == -1) mapHeight = rc.getMapHeight();
         if (opponent == null) opponent = rc.getTeam().opponent();
-        if (exploreDest == null) exploreDest = new MapLocation(rng.nextInt(mapWidth), rng.nextInt(mapHeight));
+        if (exploreDest == null) exploreDest = randomLocation(rc);
 
         // Try to attack someone
         RobotInfo[] enemies = rc.senseNearbyRobots(actionRadiusSquared, opponent);
@@ -104,7 +110,7 @@ public class Soldier {
         targetLocation = exploreDest;
         // randomly generate a new target location if you get close enough to it
         if (rc.getLocation().distanceSquaredTo(targetLocation) < actionRadiusSquared / 2) {
-            exploreDest = new MapLocation(rng.nextInt(rc.getMapWidth()), rng.nextInt(rc.getMapHeight()));
+            exploreDest = randomLocation(rc);
             targetLocation = exploreDest;
         }
 
