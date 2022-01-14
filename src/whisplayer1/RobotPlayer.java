@@ -41,6 +41,15 @@ public strictfp class RobotPlayer {
             try {
                 switch (rc.getType()) {
                     case ARCHON:
+                        rc.setIndicatorString(
+                            rc.readSharedArray(0) +
+                            " " +
+                            rc.readSharedArray(1) +
+                            " " +
+                            rc.readSharedArray(2) +
+                            " " +
+                            rc.readSharedArray(3)
+                        );
                         Archon.runArchon(rc);
                         break;
                     case MINER:
@@ -120,17 +129,18 @@ public strictfp class RobotPlayer {
     }
 
     public static void addEnemyArchon(RobotController rc, MapLocation loc) throws GameActionException {
-        int convertLocation = loc.x * 100 + loc.y;
+        int encoding = loc.x * 100 + loc.y;
         for (int i = enemyArchonStartIndex; i < enemyArchonStopIndex; i++) {
-            if (rc.readSharedArray(i) == convertLocation) {
+            if (rc.readSharedArray(i) == encoding) {
                 return;
             } else if (rc.readSharedArray(i) == 0) {
-                rc.writeSharedArray(i, convertLocation);
+                rc.writeSharedArray(i, encoding);
                 return;
             }
         }
     }
 
+    // check if shared array's locations for enemy archons are still accurate
     public static void checkEnemyArchons(RobotController rc) throws GameActionException {
         for (int i = enemyArchonStartIndex; i < enemyArchonStopIndex; i++) {
             MapLocation a = new MapLocation(rc.readSharedArray(i) / 100, rc.readSharedArray(i) % 100);

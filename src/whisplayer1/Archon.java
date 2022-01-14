@@ -5,15 +5,10 @@ import java.util.Random;
 
 public strictfp class Archon {
 
-    /**
-     * A random number generator.
-     */
     static final Random rng = new Random(6147);
     static int spawnCounter = 0;
     static int ratio = 5;
-    /**
-     * Array containing all the possible movement directions.
-     */
+
     static final Direction[] directions = {
         Direction.NORTH,
         Direction.NORTHEAST,
@@ -62,25 +57,20 @@ public strictfp class Archon {
         rc.writeSharedArray(index, loc.x * 100 + loc.y);
     }
 
-    /**
-     * Run a single turn for an Archon.
-     * This code is wrapped inside the infinite loop in run(), so it is called once
-     * per turn.
-     */
     static void runArchon(RobotController rc) throws GameActionException {
         // write lead deposit to shared array
-        if (!wroteToSharedArray) {
-            MapLocation[] leadDeposits = rc.senseNearbyLocationsWithLead(RobotType.ARCHON.visionRadiusSquared);
-            if (leadDeposits.length > 0) {
-                for (int i = 0; i < rc.getArchonCount(); i++) {
-                    if (rc.readSharedArray(i) == 0) {
-                        rc.writeSharedArray(i, leadDeposits[0].x * 100 + leadDeposits[0].y);
-                        wroteToSharedArray = true;
-                        break;
-                    }
-                }
-            }
-        }
+        // if (!wroteToSharedArray) {
+        //     MapLocation[] leadDeposits = rc.senseNearbyLocationsWithLead(RobotType.ARCHON.visionRadiusSquared);
+        //     if (leadDeposits.length > 0) {
+        //         for (int i = 0; i < rc.getArchonCount(); i++) {
+        //             if (rc.readSharedArray(i) == 0) {
+        //                 rc.writeSharedArray(i, leadDeposits[0].x * 100 + leadDeposits[0].y);
+        //                 wroteToSharedArray = true;
+        //                 break;
+        //             }
+        //         }
+        //     }
+        // }
 
         // write to shared array for defense
         writeArchonLocation(rc);
@@ -116,7 +106,6 @@ public strictfp class Archon {
             // otherwise spawn them such that we move closer to having 50/50
             ratio = (total > 0) ? (10 * numSoldiers / total) : 10;
         }
-        rc.setIndicatorString(ratio + "");
 
         // stop early if you can't spawn
         if (!rc.isActionReady()) return;

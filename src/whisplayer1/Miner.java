@@ -74,13 +74,13 @@ public strictfp class Miner {
         if (mapWidth == -1) mapWidth = rc.getMapWidth();
         if (opponent == null) opponent = rc.getTeam().opponent();
         // assign first couple miners to monitor deposits near archons
-        if (archonDeposit == null) archonDeposit =
-            rc.readSharedArray(RobotPlayer.minerCountIndex) < (3 * rc.getArchonCount());
+        // if (archonDeposit == null) archonDeposit =
+        //     rc.readSharedArray(RobotPlayer.minerCountIndex) < (3 * rc.getArchonCount());
         if (destination == null) {
-            destination =
-                archonDeposit
-                    ? RobotPlayer.retrieveLocationfromArray(rc, rng.nextInt(rc.getArchonCount()))
-                    : randomLocation(rc);
+            destination = randomLocation(rc);
+            // archonDeposit
+            //     ? RobotPlayer.retrieveLocationfromArray(rc, rng.nextInt(rc.getArchonCount()))
+            //     : randomLocation(rc);
         }
 
         // Try to mine on squares around us.
@@ -131,7 +131,7 @@ public strictfp class Miner {
         if (targetLocation == null) {
             // randomly generate a new destination if you're already there and you aren't assigned to watch
             // deposits near archons
-            if (rc.getLocation().distanceSquaredTo(destination) < visionRadiusSquared / 2 && !archonDeposit) {
+            if (rc.getLocation().distanceSquaredTo(destination) < visionRadiusSquared / 2) {
                 destination = randomLocation(rc);
             }
             targetLocation = destination;
