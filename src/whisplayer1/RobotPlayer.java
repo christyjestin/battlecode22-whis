@@ -15,9 +15,11 @@ public strictfp class RobotPlayer {
 
     static final int enemyArchonStartIndex = GameConstants.SHARED_ARRAY_LENGTH - GameConstants.MAX_STARTING_ARCHONS;
     static final int enemyArchonStopIndex = GameConstants.SHARED_ARRAY_LENGTH;
-    static final int ownArchonStartIndex = enemyArchonStartIndex - GameConstants.MAX_STARTING_ARCHONS;
-    static final int ownArchonStopIndex = enemyArchonStartIndex;
-    static final int archonCounterIndex = ownArchonStartIndex - 1;
+    static final int archonHealthStartIndex = enemyArchonStartIndex - GameConstants.MAX_STARTING_ARCHONS;
+    static final int archonHealthStopIndex = enemyArchonStartIndex;
+    static final int archonLocationStartIndex = archonHealthStartIndex - GameConstants.MAX_STARTING_ARCHONS;
+    static final int archonLocationStopIndex = archonHealthStopIndex;
+    static final int archonCounterIndex = archonLocationStartIndex - 1;
 
     static final Direction[] directions = {
         Direction.NORTH,
@@ -37,17 +39,17 @@ public strictfp class RobotPlayer {
 
             // Try/catch blocks stop unhandled exceptions, which cause your robot to explode.
             try {
-                rc.setIndicatorString(
-                    rc.readSharedArray(4) +
-                    " " +
-                    rc.readSharedArray(5) +
-                    " " +
-                    rc.readSharedArray(6) +
-                    " " +
-                    rc.readSharedArray(55)
-                );
                 switch (rc.getType()) {
                     case ARCHON:
+                        rc.setIndicatorString(
+                            rc.readSharedArray(60) +
+                            " " +
+                            rc.readSharedArray(61) +
+                            " " +
+                            rc.readSharedArray(62) +
+                            " " +
+                            rc.readSharedArray(63)
+                        );
                         Archon.runArchon(rc);
                         break;
                     case MINER:
@@ -152,9 +154,7 @@ public strictfp class RobotPlayer {
 
     public static MapLocation retrieveLocationfromArray(RobotController rc, int index) throws GameActionException {
         int encoding = rc.readSharedArray(index);
-        int x = encoding / 100;
-        int y = encoding % 100;
-        return new MapLocation(x, y);
+        return new MapLocation(encoding / 100, encoding % 100);
     }
 
     public static void incrementArray(RobotController rc, int index) throws GameActionException {

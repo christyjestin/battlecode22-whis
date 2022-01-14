@@ -6,14 +6,8 @@ import java.util.Random;
 
 public strictfp class Miner {
 
-    /**
-     * A random number generator.
-     */
     static final Random rng = new Random();
 
-    /**
-     * Array containing all the possible movement directions.
-     */
     static final Direction[] directions = {
         Direction.NORTH,
         Direction.NORTHEAST,
@@ -26,7 +20,6 @@ public strictfp class Miner {
     };
 
     static MapLocation destination = null;
-
     static final int visionRadiusSquared = RobotType.MINER.visionRadiusSquared;
     static final int actionRadiusSquared = RobotType.MINER.actionRadiusSquared;
     static int mapHeight = -1;
@@ -58,6 +51,12 @@ public strictfp class Miner {
         return new MapLocation(x, y);
     }
 
+    static MapLocation randomLocation(RobotController rc) throws GameActionException {
+        if (mapHeight == -1) mapHeight = rc.getMapHeight();
+        if (mapWidth == -1) mapWidth = rc.getMapWidth();
+        return new MapLocation(rng.nextInt(mapWidth), rng.nextInt(mapHeight));
+    }
+
     /**
      * Run a single turn for a Miner.
      * This code is wrapped inside the infinite loop in run(), so it is called once
@@ -65,7 +64,7 @@ public strictfp class Miner {
      */
     static void runMiner(RobotController rc) throws GameActionException {
         // report likely miner death
-        if (rc.getHealth() < 4 && !reportedDeath) {
+        if (rc.getHealth() < 6 && !reportedDeath) {
             RobotPlayer.decrementArray(rc, RobotPlayer.minerCountIndex);
             reportedDeath = true;
         }
@@ -81,7 +80,7 @@ public strictfp class Miner {
             destination =
                 archonDeposit
                     ? RobotPlayer.retrieveLocationfromArray(rc, rng.nextInt(rc.getArchonCount()))
-                    : generateLocation(rc);
+                    : randomLocation(rc);
         }
 
         // Try to mine on squares around us.
@@ -132,7 +131,9 @@ public strictfp class Miner {
         if (targetLocation == null) {
             // randomly generate a new destination if you're already there and you aren't assigned to watch
             // deposits near archons
-            if (destination.equals(rc.getLocation()) && !archonDeposit) destination = generateLocation(rc);
+            if (rc.getLocation().distanceSquaredTo(destination) < visionRadiusSquared / 2 && !archonDeposit) {
+                destination = randomLocation(rc);
+            }
             targetLocation = destination;
         }
 

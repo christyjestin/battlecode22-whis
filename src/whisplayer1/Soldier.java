@@ -27,6 +27,36 @@ public class Soldier {
     static int mapHeight = -1;
     static Team opponent = null;
     static boolean reportedDeath = false;
+    static Boolean defenseMode = null;
+    static MapLocation defendingLocation = null;
+
+    static boolean isArchonAtLocation(RobotController rc, MapLocation loc) throws GameActionException {
+        return rc.canSenseRobotAtLocation(loc) && rc.senseRobotAtLocation(defendingLocation).type == RobotType.ARCHON;
+    }
+
+    static int weakestArchonHealth(RobotController rc) throws GameActionException {
+        int minHealth = RobotType.ARCHON.getMaxHealth(3);
+        for (int i = RobotPlayer.archonHealthStartIndex; i < RobotPlayer.archonHealthStopIndex; i++) {
+            int val = rc.readSharedArray(i);
+            if (val != 0 && val < minHealth) minHealth = val;
+        }
+        System.out.println("minHealth:" + minHealth);
+        return minHealth;
+    }
+
+    static MapLocation weakestArchonLocation(RobotController rc) throws GameActionException {
+        int minHealth = RobotType.ARCHON.getMaxHealth(3);
+        int index = 0;
+        for (int i = RobotPlayer.archonHealthStartIndex; i < RobotPlayer.archonHealthStopIndex; i++) {
+            int val = rc.readSharedArray(i);
+            if (val != 0 && val < minHealth) {
+                minHealth = val;
+                index = i - RobotPlayer.archonHealthStartIndex;
+            }
+        }
+        // retrieve encoding of weakest archon's location from shared array
+        return RobotPlayer.retrieveLocationfromArray(rc, RobotPlayer.archonLocationStartIndex + index);
+    }
 
     /**
      * Run a single turn for a Soldier.
@@ -35,7 +65,7 @@ public class Soldier {
      */
     public static void runSoldier(RobotController rc) throws GameActionException {
         // report likely soldier death
-        if (rc.getHealth() < 4 && !reportedDeath) {
+        if (rc.getHealth() < 6 && !reportedDeath) {
             RobotPlayer.decrementArray(rc, RobotPlayer.soldierCountIndex);
             reportedDeath = true;
         }
@@ -71,20 +101,43 @@ public class Soldier {
 
         if (!rc.isMovementReady()) return;
 
-        // move using pathfinder algorithm
         targetLocation = exploreDest;
-        if (targetLocation.equals(rc.getLocation())) {
+        // randomly generate a new target location if you get close enough to it
+        if (rc.getLocation().distanceSquaredTo(targetLocation) < actionRadiusSquared / 2) {
             exploreDest = new MapLocation(rng.nextInt(rc.getMapWidth()), rng.nextInt(rc.getMapHeight()));
             targetLocation = exploreDest;
         }
 
-        for (int i = 60; i < 64; i++) {
-            if (rc.readSharedArray(i) != 0) {
-                targetLocation = RobotPlayer.retrieveLocationfromArray(rc, i);
+        // note that currently, once defenseMode is set to false, it won't ever change
+        if (defenseMode != null && defenseMode) {
+            // if the archon isn't there anymore, then stop defending
+            if (rc.canSenseLocation(defendingLocation) && !isArchonAtLocation(rc, defendingLocation)) {
+                defenseMode = null;
+                // if there are too many robots nearby, have half of the robots stop defending
+            } else if (rc.senseNearbyRobots(visionRadiusSquared, rc.getTeam()).length > actionRadiusSquared) {
+                defenseMode = rng.nextBoolean();
+            }
+            // if this robot is still a defender, go towards the archon being attacked
+            if (defenseMode != null && defenseMode) targetLocation = defendingLocation;
+            // if an archon is being attacked, have half of the archons go defend it
+        } else if (defenseMode == null && weakestArchonHealth(rc) < RobotType.ARCHON.getMaxHealth(1)) {
+            defenseMode = rng.nextBoolean();
+            if (defenseMode) {
+                defendingLocation = weakestArchonLocation(rc);
+                targetLocation = defendingLocation;
+            }
+        }
+        // otherwise check if we know the location of an enemy archon
+        if (defenseMode == null || defenseMode == false) {
+            for (int i = RobotPlayer.enemyArchonStartIndex; i < RobotPlayer.enemyArchonStopIndex; i++) {
+                if (rc.readSharedArray(i) != 0) {
+                    targetLocation = RobotPlayer.retrieveLocationfromArray(rc, i);
+                    break;
+                }
             }
         }
 
-        System.out.println(targetLocation.toString());
+        rc.setIndicatorString(targetLocation.toString());
         RobotPlayer.pathfinder(targetLocation, rc);
     }
 }

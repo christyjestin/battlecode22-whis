@@ -29,25 +29,37 @@ public strictfp class Archon {
     static boolean wroteToSharedArray = false;
     static final int visionRadiusSquared = RobotType.ARCHON.visionRadiusSquared;
     static Team opponent = null;
-    static int healthIndex = -1;
+    static int archonIndex = -1;
 
     // write the archon's health to the shared array and get the minimum health of all archons
     static int minArchonHealth(RobotController rc) throws GameActionException {
-        if (healthIndex == -1) {
+        if (archonIndex == -1) {
             // retrieve an index for this archon
-            healthIndex = rc.readSharedArray(RobotPlayer.archonCounterIndex);
+            archonIndex = rc.readSharedArray(RobotPlayer.archonCounterIndex);
             RobotPlayer.incrementArray(rc, RobotPlayer.archonCounterIndex);
         }
         int health = rc.getHealth();
-        int index = RobotPlayer.ownArchonStartIndex + healthIndex;
+        int index = RobotPlayer.archonHealthStartIndex + archonIndex;
         // if you're close to dying, reset the array; otherwise just write your health
         rc.writeSharedArray(index, (health < 50) ? 0 : health);
         int minHealth = RobotType.ARCHON.getMaxHealth(3);
-        for (int i = RobotPlayer.ownArchonStartIndex; i < RobotPlayer.ownArchonStopIndex; i++) {
+        for (int i = RobotPlayer.archonHealthStartIndex; i < RobotPlayer.archonHealthStopIndex; i++) {
             int val = rc.readSharedArray(i);
             if (val != 0 && val < minHealth) minHealth = val;
         }
         return minHealth;
+    }
+
+    // write the archon's health to the shared array and get the minimum health of all archons
+    static void writeArchonLocation(RobotController rc) throws GameActionException {
+        if (archonIndex == -1) {
+            // retrieve an index for this archon
+            archonIndex = rc.readSharedArray(RobotPlayer.archonCounterIndex);
+            RobotPlayer.incrementArray(rc, RobotPlayer.archonCounterIndex);
+        }
+        int index = RobotPlayer.archonLocationStartIndex + archonIndex;
+        MapLocation loc = rc.getLocation();
+        rc.writeSharedArray(index, loc.x * 100 + loc.y);
     }
 
     /**
@@ -69,6 +81,9 @@ public strictfp class Archon {
                 }
             }
         }
+
+        // write to shared array for defense
+        writeArchonLocation(rc);
 
         // init code code
         if (center == null) center = new MapLocation(rc.getMapWidth() / 2, rc.getMapHeight() / 2);
