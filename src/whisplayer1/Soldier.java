@@ -31,6 +31,7 @@ public class Soldier {
     static MapLocation defendingLocation = null;
     static Boolean reserveMode = rng.nextBoolean();
     static MapLocation center = null;
+    static Direction[] lastThreeMoves = { null, null, null };
 
     static MapLocation randomLocation(RobotController rc) throws GameActionException {
         if (mapHeight == -1) mapHeight = rc.getMapHeight();
@@ -147,6 +148,6 @@ public class Soldier {
         }
 
         rc.setIndicatorString(targetLocation.toString());
-        RobotPlayer.pathfinder(targetLocation, rc);
+        lastThreeMoves = RobotPlayer.pathfinder(targetLocation, rc, lastThreeMoves);
     }
 }
