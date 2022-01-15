@@ -36,8 +36,7 @@ public strictfp class Miner {
 
     // algorithm to randomly generate a location on grid based on miner's vision radius
     static MapLocation generateLocation(RobotController rc) throws GameActionException {
-        // one square on our grid should be the same size as the inscribed square in the
-        // vision radius circle
+        // one square on our grid should be the same size as the inscribed square in the vision radius circle
         if (halfGridLength == -1) halfGridLength = Math.sqrt(visionRadiusSquared / 2.0);
 
         double fullGridLength = 2.0 * halfGridLength;
@@ -59,11 +58,6 @@ public strictfp class Miner {
         return new MapLocation(rng.nextInt(mapWidth), rng.nextInt(mapHeight));
     }
 
-    /**
-     * Run a single turn for a Miner.
-     * This code is wrapped inside the infinite loop in run(), so it is called once
-     * per turn.
-     */
     static void runMiner(RobotController rc) throws GameActionException {
         // report likely miner death
         if (rc.getHealth() < 6 && !reportedDeath) {
@@ -75,23 +69,13 @@ public strictfp class Miner {
         if (mapHeight == -1) mapHeight = rc.getMapHeight();
         if (mapWidth == -1) mapWidth = rc.getMapWidth();
         if (opponent == null) opponent = rc.getTeam().opponent();
-        // assign first couple miners to monitor deposits near archons
-        // if (archonDeposit == null) archonDeposit =
-        //     rc.readSharedArray(RobotPlayer.minerCountIndex) < (3 * rc.getArchonCount());
-        if (destination == null) {
-            destination = randomLocation(rc);
-            // archonDeposit
-            //     ? RobotPlayer.retrieveLocationfromArray(rc, rng.nextInt(rc.getArchonCount()))
-            //     : randomLocation(rc);
-        }
+        if (destination == null) destination = randomLocation(rc);
 
         // Try to mine on squares around us.
         MapLocation me = rc.getLocation();
         for (int dx = -1; dx <= 1; dx++) {
             for (int dy = -1; dy <= 1; dy++) {
                 MapLocation mineLocation = new MapLocation(me.x + dx, me.y + dy);
-                // Notice that the Miner's action cooldown is very low.
-                // You can mine multiple times per turn!
                 while (rc.canMineGold(mineLocation)) {
                     rc.mineGold(mineLocation);
                 }
