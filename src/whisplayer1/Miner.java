@@ -131,8 +131,7 @@ public strictfp class Miner {
 
         // move using pathfinder algorithm
         if (targetLocation == null) {
-            // randomly generate a new destination if you're already there and you aren't assigned to watch
-            // deposits near archons
+            // randomly generate a new destination if you're already there
             if (rc.getLocation().distanceSquaredTo(destination) < visionRadiusSquared / 2) {
                 destination = randomLocation(rc);
             }
