@@ -157,8 +157,8 @@ public class Soldier {
             if (rc.canMove(nextMove)) {
                 rc.move(nextMove);
                 lastThreeMoves = new Direction[] { lastThreeMoves[1], lastThreeMoves[2], nextMove };
-                nextMove = null;
             }
+            nextMove = null;
         }
     }
 }
