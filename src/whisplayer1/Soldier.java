@@ -121,7 +121,7 @@ public class Soldier {
 
         targetLocation = exploreDest;
         // randomly generate a new target location if you get close enough to it, and you're not a reserve soldier
-        if (!reserveMode && closeEnoughTo(rc, targetLocation, actionRadiusSquared / 2)) {
+        if (!reserveMode && closeEnoughTo(rc, exploreDest, actionRadiusSquared / 2)) {
             exploreDest = randomLocation(rc);
             targetLocation = exploreDest;
         }
