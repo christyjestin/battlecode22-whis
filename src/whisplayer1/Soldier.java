@@ -44,6 +44,15 @@ public class Soldier {
         return rc.canSenseRobotAtLocation(loc) && rc.senseRobotAtLocation(defendingLocation).type == RobotType.ARCHON;
     }
 
+    static int nearbySoldiersCount(RobotController rc) throws GameActionException {
+        RobotInfo[] nearbyBots = rc.senseNearbyRobots(visionRadiusSquared, rc.getTeam());
+        int counter = 0;
+        for (RobotInfo bot : nearbyBots) {
+            if (bot.type.equals(RobotType.SOLDIER)) counter++;
+        }
+        return counter;
+    }
+
     static int weakestArchonHealth(RobotController rc) throws GameActionException {
         int minHealth = RobotType.ARCHON.getMaxHealth(3);
         for (int i = RobotPlayer.archonHealthStartIndex; i < RobotPlayer.archonHealthStopIndex; i++) {
@@ -125,7 +134,7 @@ public class Soldier {
             if (rc.canSenseLocation(defendingLocation) && !isArchonAtLocation(rc, defendingLocation)) {
                 defenseMode = null;
                 // if there are too many robots nearby, have half of the robots stop defending
-            } else if (rc.senseNearbyRobots(visionRadiusSquared, rc.getTeam()).length > actionRadiusSquared) {
+            } else if (nearbySoldiersCount(rc) > actionRadiusSquared) {
                 defenseMode = rng.nextBoolean();
             }
             // if this robot is still a defender, go towards the archon being attacked
