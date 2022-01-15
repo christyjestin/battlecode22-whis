@@ -27,6 +27,7 @@ public strictfp class Miner {
     static Team opponent = null;
     static boolean reportedDeath = false;
     static Direction[] lastThreeMoves = { null, null, null };
+    static Direction nextMove = null;
 
     // bool indicating whether the miner is assigned to watch lead deposits near archons
     static Boolean archonDeposit = null;
@@ -138,6 +139,16 @@ public strictfp class Miner {
             targetLocation = destination;
         }
 
-        lastThreeMoves = RobotPlayer.pathfinder(targetLocation, rc, lastThreeMoves);
+        if (nextMove == null) {
+            Direction[] pathfinderReturn = RobotPlayer.pathfinder(targetLocation, rc, lastThreeMoves);
+            lastThreeMoves = new Direction[] { pathfinderReturn[0], pathfinderReturn[1], pathfinderReturn[2] };
+            nextMove = pathfinderReturn[3];
+        } else {
+            if (rc.canMove(nextMove)) {
+                rc.move(nextMove);
+                lastThreeMoves = new Direction[] { lastThreeMoves[1], lastThreeMoves[2], nextMove };
+                nextMove = null;
+            }
+        }
     }
 }

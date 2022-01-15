@@ -32,6 +32,7 @@ public class Soldier {
     static Boolean reserveMode = rng.nextBoolean();
     static MapLocation center = null;
     static Direction[] lastThreeMoves = { null, null, null };
+    static Direction nextMove = null;
 
     static MapLocation randomLocation(RobotController rc) throws GameActionException {
         if (mapHeight == -1) mapHeight = rc.getMapHeight();
@@ -148,6 +149,16 @@ public class Soldier {
         }
 
         rc.setIndicatorString(targetLocation.toString());
-        lastThreeMoves = RobotPlayer.pathfinder(targetLocation, rc, lastThreeMoves);
+        if (nextMove == null) {
+            Direction[] pathfinderReturn = RobotPlayer.pathfinder(targetLocation, rc, lastThreeMoves);
+            lastThreeMoves = new Direction[] { pathfinderReturn[0], pathfinderReturn[1], pathfinderReturn[2] };
+            nextMove = pathfinderReturn[3];
+        } else {
+            if (rc.canMove(nextMove)) {
+                rc.move(nextMove);
+                lastThreeMoves = new Direction[] { lastThreeMoves[1], lastThreeMoves[2], nextMove };
+                nextMove = null;
+            }
+        }
     }
 }

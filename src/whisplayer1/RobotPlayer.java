@@ -109,7 +109,8 @@ public strictfp class RobotPlayer {
         };
         Direction bestMove = null;
         int bestScore = -500;
-        Direction move = null;
+        Direction currentMove = null;
+        boolean redirected = false;
         for (int i = 0; i < possibleMoves.length; i++) {
             if (rc.canMove(possibleMoves[i])) {
                 // override pathfinding algorithm if destination is adjacent
@@ -127,8 +128,9 @@ public strictfp class RobotPlayer {
         if (bestMove != null) {
             if (isRepeatMove(lastThreeMoves, bestMove)) {
                 bestMove = rng.nextBoolean() ? turnLeft(bestMove) : turnRight(bestMove);
+                redirected = true;
             }
-            move = bestMove;
+            currentMove = bestMove;
             rc.move(bestMove);
         } else {
             Direction oppositeDirection = targetDirection.opposite();
@@ -151,12 +153,13 @@ public strictfp class RobotPlayer {
             if (bestBackupMove != null) {
                 if (isRepeatMove(lastThreeMoves, bestBackupMove)) {
                     bestBackupMove = rng.nextBoolean() ? turnLeft(bestBackupMove) : turnRight(bestBackupMove);
+                    redirected = true;
                 }
-                move = bestBackupMove;
+                currentMove = bestBackupMove;
                 rc.move(bestBackupMove);
             }
         }
-        Direction[] ret = { lastThreeMoves[1], lastThreeMoves[2], move };
+        Direction[] ret = { lastThreeMoves[1], lastThreeMoves[2], currentMove, redirected ? currentMove : null };
         return ret;
     }
 
