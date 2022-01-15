@@ -76,6 +76,38 @@ public class Soldier {
         return RobotPlayer.retrieveLocationfromArray(rc, RobotPlayer.archonLocationStartIndex + index);
     }
 
+    static MapLocation archonDefenseLocation(RobotController rc, MapLocation loc) throws GameActionException {
+        if (mapWidth == -1) mapWidth = rc.getMapWidth();
+        if (mapHeight == -1) mapHeight = rc.getMapHeight();
+        int x = loc.x;
+        int y = loc.y;
+        MapLocation bottomLocation = loc.add(Direction.SOUTH);
+        MapLocation topLocation = loc.add(Direction.NORTH);
+        MapLocation leftLocation = loc.add(Direction.WEST);
+        MapLocation rightLocation = loc.add(Direction.EAST);
+        int bottomDistance = y;
+        int topDistance = mapHeight - 1 - y;
+        int leftDistance = x;
+        int rightDistance = mapWidth - 1 - x;
+        // opening on bottom
+        if (bottomDistance <= topDistance && bottomDistance <= leftDistance && bottomDistance <= rightDistance) {
+            MapLocation[] otherLocations = { topLocation, leftLocation, rightLocation };
+            return otherLocations[rng.nextInt(3)];
+            // opening on left
+        } else if (leftDistance <= topDistance && leftDistance <= bottomDistance && leftDistance <= rightDistance) {
+            MapLocation[] otherLocations = { topLocation, bottomLocation, rightLocation };
+            return otherLocations[rng.nextInt(3)];
+            // opening on top
+        } else if (topDistance <= leftDistance && topDistance <= bottomDistance && topDistance <= rightDistance) {
+            MapLocation[] otherLocations = { leftLocation, bottomLocation, rightLocation };
+            return otherLocations[rng.nextInt(3)];
+            // opening on right
+        } else {
+            MapLocation[] otherLocations = { leftLocation, bottomLocation, topLocation };
+            return otherLocations[rng.nextInt(3)];
+        }
+    }
+
     static boolean closeEnoughTo(RobotController rc, MapLocation loc, int distanceSquared) throws GameActionException {
         return rc.getLocation().isWithinDistanceSquared(loc, distanceSquared);
     }
@@ -121,7 +153,7 @@ public class Soldier {
 
         targetLocation = exploreDest;
         // randomly generate a new target location if you get close enough to it, and you're not a reserve soldier
-        if (!reserveMode && closeEnoughTo(rc, targetLocation, actionRadiusSquared / 2)) {
+        if (!reserveMode && closeEnoughTo(rc, exploreDest, actionRadiusSquared / 2)) {
             exploreDest = randomLocation(rc);
             targetLocation = exploreDest;
         }
