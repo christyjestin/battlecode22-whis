@@ -7,7 +7,6 @@ public class Soldier {
 
     static final Random rng = new Random();
 
-    /** Array containing all the possible movement directions. */
     static final Direction[] directions = {
         Direction.NORTH,
         Direction.NORTHEAST,
@@ -77,11 +76,10 @@ public class Soldier {
         return RobotPlayer.retrieveLocationfromArray(rc, RobotPlayer.archonLocationStartIndex + index);
     }
 
-    /**
-     * Run a single turn for a Soldier.
-     * This code is wrapped inside the infinite loop in run(), so it is called once
-     * per turn.
-     */
+    static boolean closeEnoughTo(RobotController rc, MapLocation loc, int distanceSquared) throws GameActionException {
+        return rc.getLocation().isWithinDistanceSquared(loc, distanceSquared);
+    }
+
     public static void runSoldier(RobotController rc) throws GameActionException {
         // report likely soldier death
         if (rc.getHealth() < 6 && !reportedDeath) {
@@ -123,7 +121,7 @@ public class Soldier {
 
         targetLocation = exploreDest;
         // randomly generate a new target location if you get close enough to it, and you're not a reserve soldier
-        if (!reserveMode && rc.getLocation().distanceSquaredTo(targetLocation) < actionRadiusSquared / 2) {
+        if (!reserveMode && closeEnoughTo(rc, targetLocation, actionRadiusSquared / 2)) {
             exploreDest = randomLocation(rc);
             targetLocation = exploreDest;
         }
@@ -134,7 +132,7 @@ public class Soldier {
             if (rc.canSenseLocation(defendingLocation) && !isArchonAtLocation(rc, defendingLocation)) {
                 defenseMode = null;
                 // if there are too many robots nearby, have half of the robots stop defending
-            } else if (nearbySoldiersCount(rc) > actionRadiusSquared) {
+            } else if (closeEnoughTo(rc, defendingLocation, 10) && nearbySoldiersCount(rc) > actionRadiusSquared) {
                 defenseMode = rng.nextBoolean();
             }
             // if this robot is still a defender, go towards the archon being attacked
