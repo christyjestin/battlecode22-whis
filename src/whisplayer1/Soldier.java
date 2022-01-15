@@ -29,7 +29,10 @@ public class Soldier {
     static boolean reportedDeath = false;
     static Boolean defenseMode = null;
     static MapLocation defendingLocation = null;
+    static Boolean reserveMode = rng.nextBoolean();
+    static MapLocation center = null;
     static Direction[] lastThreeMoves = { null, null, null };
+    static Direction nextMove = null;
 
     static MapLocation randomLocation(RobotController rc) throws GameActionException {
         if (mapHeight == -1) mapHeight = rc.getMapHeight();
@@ -82,8 +85,9 @@ public class Soldier {
         // init code
         if (mapWidth == -1) mapWidth = rc.getMapWidth();
         if (mapHeight == -1) mapHeight = rc.getMapHeight();
+        if (center == null) center = new MapLocation(mapWidth / 2, mapHeight / 2);
         if (opponent == null) opponent = rc.getTeam().opponent();
-        if (exploreDest == null) exploreDest = randomLocation(rc);
+        if (exploreDest == null) exploreDest = reserveMode ? center : randomLocation(rc);
 
         // Try to attack someone
         RobotInfo[] enemies = rc.senseNearbyRobots(actionRadiusSquared, opponent);
@@ -109,8 +113,8 @@ public class Soldier {
         if (!rc.isMovementReady()) return;
 
         targetLocation = exploreDest;
-        // randomly generate a new target location if you get close enough to it
-        if (rc.getLocation().distanceSquaredTo(targetLocation) < actionRadiusSquared / 2) {
+        // randomly generate a new target location if you get close enough to it, and you're not a reserve soldier
+        if (!reserveMode && rc.getLocation().distanceSquaredTo(targetLocation) < actionRadiusSquared / 2) {
             exploreDest = randomLocation(rc);
             targetLocation = exploreDest;
         }
@@ -145,6 +149,16 @@ public class Soldier {
         }
 
         rc.setIndicatorString(targetLocation.toString());
-        lastThreeMoves = RobotPlayer.pathfinder(targetLocation, rc, lastThreeMoves);
+        if (nextMove == null) {
+            Direction[] pathfinderReturn = RobotPlayer.pathfinder(targetLocation, rc, lastThreeMoves);
+            lastThreeMoves = new Direction[] { pathfinderReturn[0], pathfinderReturn[1], pathfinderReturn[2] };
+            nextMove = pathfinderReturn[3];
+        } else {
+            if (rc.canMove(nextMove)) {
+                rc.move(nextMove);
+                lastThreeMoves = new Direction[] { lastThreeMoves[1], lastThreeMoves[2], nextMove };
+                nextMove = null;
+            }
+        }
     }
 }
