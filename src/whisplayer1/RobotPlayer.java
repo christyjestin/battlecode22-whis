@@ -78,9 +78,28 @@ public strictfp class RobotPlayer {
         }
     }
 
-    public static void pathfinder(MapLocation targetLocation, RobotController rc) throws GameActionException {
+    public static boolean isRepeatMove(Direction[] lastThreeMoves, Direction nextMove) {
+        for (Direction move : lastThreeMoves) {
+            if (move == null || move.equals(Direction.CENTER)) return false;
+        }
+        return lastThreeMoves[0].equals(lastThreeMoves[2]) && lastThreeMoves[1].equals(nextMove);
+    }
+
+    public static Direction turnLeft(Direction dir) {
+        return dir.rotateLeft().rotateLeft();
+    }
+
+    public static Direction turnRight(Direction dir) {
+        return dir.rotateRight().rotateRight();
+    }
+
+    public static Direction[] pathfinder(MapLocation targetLocation, RobotController rc, Direction[] lastThreeMoves)
+        throws GameActionException {
         Direction targetDirection = rc.getLocation().directionTo(targetLocation);
-        if (targetDirection.equals(Direction.CENTER)) return;
+        if (targetDirection.equals(Direction.CENTER)) {
+            Direction[] ret = { lastThreeMoves[1], lastThreeMoves[2], Direction.CENTER };
+            return ret;
+        }
         Direction[] possibleMoves = {
             targetDirection.rotateLeft().rotateLeft(),
             targetDirection.rotateLeft(),
@@ -90,6 +109,7 @@ public strictfp class RobotPlayer {
         };
         Direction bestMove = null;
         int bestScore = -500;
+        Direction move = null;
         for (int i = 0; i < possibleMoves.length; i++) {
             if (rc.canMove(possibleMoves[i])) {
                 // override pathfinding algorithm if destination is adjacent
@@ -105,6 +125,10 @@ public strictfp class RobotPlayer {
             }
         }
         if (bestMove != null) {
+            if (isRepeatMove(lastThreeMoves, bestMove)) {
+                bestMove = rng.nextBoolean() ? turnLeft(bestMove) : turnRight(bestMove);
+            }
+            move = bestMove;
             rc.move(bestMove);
         } else {
             Direction oppositeDirection = targetDirection.opposite();
@@ -124,8 +148,16 @@ public strictfp class RobotPlayer {
                     }
                 }
             }
-            if (bestBackupMove != null) rc.move(bestBackupMove);
+            if (bestBackupMove != null) {
+                if (isRepeatMove(lastThreeMoves, bestBackupMove)) {
+                    bestBackupMove = rng.nextBoolean() ? turnLeft(bestBackupMove) : turnRight(bestBackupMove);
+                }
+                move = bestBackupMove;
+                rc.move(bestBackupMove);
+            }
         }
+        Direction[] ret = { lastThreeMoves[1], lastThreeMoves[2], move };
+        return ret;
     }
 
     public static void addEnemyArchon(RobotController rc, MapLocation loc) throws GameActionException {
