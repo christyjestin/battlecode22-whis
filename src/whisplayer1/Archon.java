@@ -92,8 +92,8 @@ public strictfp class Archon {
         // spawn both miners and soldiers in a dynamic ratio
         RobotInfo[] nearbyEnemies = rc.senseNearbyRobots(visionRadiusSquared, rc.getTeam().opponent());
         if (minArchonHealth(rc) < RobotType.ARCHON.getMaxHealth(1) || nearbyEnemies.length > 0) {
-            // only spawn soldiers
-            ratio = 0;
+            // spawn 10% miners, 90% soldiers
+            ratio = 1;
         } else if (RobotPlayer.enemyArchonDetected(rc)) {
             // spawn 30% miners, 70% soldiers
             ratio = 3;
