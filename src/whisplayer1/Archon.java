@@ -5,8 +5,7 @@ import java.util.Random;
 
 public strictfp class Archon {
 
-    static final Random rng = new Random(6147);
-    static int spawnCounter = 0;
+    static final Random rng = new Random();
     static int ratio = 5;
 
     static final Direction[] directions = {
@@ -21,13 +20,17 @@ public strictfp class Archon {
     };
 
     static MapLocation center = null;
-    static boolean wroteToSharedArray = false;
+    static boolean wroteLocation = false;
     static final int visionRadiusSquared = RobotType.ARCHON.visionRadiusSquared;
     static Team opponent = null;
     static Team team = null;
     static int archonIndex = -1;
     static int mapWidth = -1;
     static int mapHeight = -1;
+    static Direction towardsCenter = null;
+    static Direction towardsRight = null;
+    static Direction towardsLeft = null;
+    static Direction[] centerDirections = null;
 
     // check if it is this archon's turn to spawn
     static boolean myTurn(RobotController rc, int index) throws GameActionException {
@@ -64,7 +67,7 @@ public strictfp class Archon {
         return minHealth;
     }
 
-    // write the archon's health to the shared array and get the minimum health of all archons
+    // write the archon's location to the shared array
     static void writeArchonLocation(RobotController rc) throws GameActionException {
         if (archonIndex == -1) {
             // retrieve an index for this archon
@@ -74,39 +77,24 @@ public strictfp class Archon {
         int index = RobotPlayer.archonLocationStartIndex + archonIndex;
         MapLocation loc = rc.getLocation();
         rc.writeSharedArray(index, loc.x * 100 + loc.y);
+        wroteLocation = true;
     }
 
     static void runArchon(RobotController rc) throws GameActionException {
-        // write lead deposit to shared array
-        // if (!wroteToSharedArray) {
-        //     MapLocation[] leadDeposits = rc.senseNearbyLocationsWithLead(RobotType.ARCHON.visionRadiusSquared);
-        //     if (leadDeposits.length > 0) {
-        //         for (int i = 0; i < rc.getArchonCount(); i++) {
-        //             if (rc.readSharedArray(i) == 0) {
-        //                 rc.writeSharedArray(i, leadDeposits[0].x * 100 + leadDeposits[0].y);
-        //                 wroteToSharedArray = true;
-        //                 break;
-        //             }
-        //         }
-        //     }
-        // }
-
         // write to shared array for defense
-        writeArchonLocation(rc);
+        if (!wroteLocation) writeArchonLocation(rc);
 
         // init code code
         if (mapWidth == -1) mapWidth = rc.getMapWidth();
         if (mapHeight == -1) mapHeight = rc.getMapHeight();
         if (center == null) center = new MapLocation(mapWidth / 2, mapHeight / 2);
+        if (towardsCenter == null) towardsCenter = rc.getLocation().directionTo(center);
+        if (towardsCenter.equals(Direction.CENTER)) towardsCenter = directions[rng.nextInt(directions.length)];
+        if (towardsRight == null) towardsCenter.rotateRight();
+        if (towardsLeft == null) towardsCenter.rotateLeft();
+        if (centerDirections == null) centerDirections = new Direction[] { towardsRight, towardsCenter, towardsLeft };
         if (team == null) team = rc.getTeam();
         if (opponent == null) opponent = team.opponent();
-
-        // randomly choose a spawn direction facing the center of the map
-        Direction towardsCenter = rc.getLocation().directionTo(center);
-        Direction towardsRight = towardsCenter.rotateRight();
-        Direction towardsLeft = towardsCenter.rotateLeft();
-        Direction[] centerDirections = { towardsRight, towardsCenter, towardsLeft };
-        Direction dir = centerDirections[rng.nextInt(centerDirections.length)];
 
         // write this archon's health and find out the lowest health on your team
         // I placed this function call up here because it needs to happen on every turn (i.e. before
@@ -140,9 +128,21 @@ public strictfp class Archon {
         RobotType spawnType = randomInt < ratio ? RobotType.MINER : RobotType.SOLDIER;
         int countIndex = randomInt < ratio ? RobotPlayer.minerCountIndex : RobotPlayer.soldierCountIndex;
         RobotPlayer.incrementArray(rc, RobotPlayer.archonSpawnStartIndex + archonIndex);
-        if (rc.canBuildRobot(spawnType, dir)) {
-            rc.buildRobot(spawnType, dir);
-            RobotPlayer.incrementArray(rc, countIndex);
+        Direction leftPointer = centerDirections[rng.nextInt(centerDirections.length)];
+        Direction rightPointer = leftPointer.rotateRight();
+        // go through the directions and try to spawn a bot
+        for (int i = 0; i < 4; i++) {
+            if (rc.canBuildRobot(spawnType, leftPointer)) {
+                rc.buildRobot(spawnType, leftPointer);
+                RobotPlayer.incrementArray(rc, countIndex);
+                break;
+            } else if (rc.canBuildRobot(spawnType, rightPointer)) {
+                rc.buildRobot(spawnType, rightPointer);
+                RobotPlayer.incrementArray(rc, countIndex);
+                break;
+            }
+            leftPointer = leftPointer.rotateLeft();
+            rightPointer = rightPointer.rotateRight();
         }
     }
 }
