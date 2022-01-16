@@ -18,8 +18,10 @@ public strictfp class RobotPlayer {
     static final int archonHealthStartIndex = enemyArchonStartIndex - GameConstants.MAX_STARTING_ARCHONS;
     static final int archonHealthStopIndex = enemyArchonStartIndex;
     static final int archonLocationStartIndex = archonHealthStartIndex - GameConstants.MAX_STARTING_ARCHONS;
-    static final int archonLocationStopIndex = archonHealthStopIndex;
-    static final int archonCounterIndex = archonLocationStartIndex - 1;
+    static final int archonLocationStopIndex = archonHealthStartIndex;
+    static final int archonSpawnStartIndex = archonLocationStartIndex - GameConstants.MAX_STARTING_ARCHONS;
+    static final int archonSpawnStopIndex = archonLocationStartIndex;
+    static final int archonCounterIndex = archonSpawnStartIndex - 1;
 
     static final Direction[] directions = {
         Direction.NORTH,
@@ -42,13 +44,13 @@ public strictfp class RobotPlayer {
                 switch (rc.getType()) {
                     case ARCHON:
                         rc.setIndicatorString(
-                            rc.readSharedArray(0) +
+                            rc.readSharedArray(48) +
                             " " +
-                            rc.readSharedArray(1) +
+                            rc.readSharedArray(49) +
                             " " +
-                            rc.readSharedArray(2) +
+                            rc.readSharedArray(50) +
                             " " +
-                            rc.readSharedArray(3)
+                            rc.readSharedArray(51)
                         );
                         Archon.runArchon(rc);
                         break;
