@@ -122,7 +122,13 @@ public strictfp class Miner {
         }
 
         if (nextMove == null) {
-            Direction[] pathfinderReturn = RobotPlayer.pathfinder(targetLocation, rc, lastThreeMoves);
+            Direction[] pathfinderReturn = RobotPlayer.rubblePathfinder(
+                rubbleGrid,
+                rcLocation,
+                targetLocation,
+                rc,
+                lastThreeMoves
+            );
             lastThreeMoves = new Direction[] { pathfinderReturn[0], pathfinderReturn[1], pathfinderReturn[2] };
             nextMove = pathfinderReturn[3];
         } else {

@@ -11,6 +11,8 @@ public strictfp class RubbleGrid {
     int arrayLength = (int) Math.ceil(gridSize / 5.0);
     int[][] grid = new int[gridCols][gridRows];
     int[] array = new int[arrayLength]; // internal copy of shared array
+    int lastGridCol;
+    int lastGridRow;
     int mapHeight;
     int mapWidth;
     int gridHeight;
@@ -27,6 +29,8 @@ public strictfp class RubbleGrid {
         this.mapWidth = mapWidth;
         this.gridHeight = (int) Math.ceil(mapHeight / (double) gridRows);
         this.gridWidth = (int) Math.ceil(mapWidth / (double) gridCols);
+        this.lastGridCol = (mapWidth - 1) / gridWidth;
+        this.lastGridRow = (mapHeight - 1) / gridHeight;
         this.rawValuePerLevel = gridHeight * gridWidth * rubbleLevelMultiplier;
     }
 
@@ -108,11 +112,11 @@ public strictfp class RubbleGrid {
         writeToSharedArray();
     }
 
-    // check if the rc and the lead deposit are in the same grid square
-    public boolean sameGridSquare(MapLocation rcLocation, MapLocation leadDeposit) {
+    // check if the rc and the target location are in the same grid square
+    public boolean sameGridSquare(MapLocation rcLocation, MapLocation targetLocation) {
         int[] rcIndices = gridIndexFromLocation(rcLocation);
-        int[] depositIndices = gridIndexFromLocation(leadDeposit);
-        return rcIndices[0] == depositIndices[0] && rcIndices[1] == depositIndices[1];
+        int[] targetIndices = gridIndexFromLocation(targetLocation);
+        return rcIndices[0] == targetIndices[0] && rcIndices[1] == targetIndices[1];
     }
 
     // calculate the grid index containing this map location
@@ -120,9 +124,51 @@ public strictfp class RubbleGrid {
         return new int[] { location.x / gridWidth, location.y / gridHeight };
     }
 
-    // return the rubble score at this map location
-    public int rubbleScoreAtLocation(MapLocation location) {
-        int[] indices = gridIndexFromLocation(location);
+    // returns the indices of the (valid) grid square in this direction
+    public int[] gridSquareInDirection(int[] gridIndices, Direction direction) {
+        int gridX = gridIndices[0];
+        int gridY = gridIndices[1];
+        int rightX = Math.min(lastGridCol, gridX + 1);
+        int leftX = Math.max(0, gridX - 1);
+        int upY = Math.min(lastGridRow, gridY + 1);
+        int downY = Math.max(0, gridY - 1);
+        switch (direction) {
+            case NORTH:
+                return new int[] { gridX, upY };
+            case NORTHEAST:
+                return new int[] { rightX, upY };
+            case EAST:
+                return new int[] { rightX, gridY };
+            case SOUTHEAST:
+                return new int[] { rightX, downY };
+            case SOUTH:
+                return new int[] { gridX, downY };
+            case SOUTHWEST:
+                return new int[] { leftX, downY };
+            case WEST:
+                return new int[] { leftX, gridY };
+            case NORTHWEST:
+                return new int[] { leftX, upY };
+            case CENTER:
+                return new int[] { gridX, gridY }; // should not happen
+            default:
+                return null; // should not happen
+        }
+    }
+
+    // return the map location of the center of the grid square
+    public MapLocation centerLocation(int[] gridIndices) {
+        int xMin = gridWidth * gridIndices[0];
+        int yMin = gridHeight * gridIndices[1];
+        int xMax = xMin + gridWidth - 1;
+        int yMax = yMin + gridHeight - 1;
+        if (xMax > mapWidth - 1) xMax = mapWidth - 1;
+        if (yMax > mapHeight - 1) yMax = mapHeight - 1;
+        return new MapLocation((xMax + xMin) / 2, (yMax + yMin) / 2);
+    }
+
+    // return the rubble score at this grid square
+    public int rubbleScoreAtGridSquare(int[] indices) {
         return grid[indices[0]][indices[1]];
     }
 

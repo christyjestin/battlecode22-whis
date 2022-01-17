@@ -157,6 +157,42 @@ public strictfp class RobotPlayer {
         return ret;
     }
 
+    // utilizes rubble grid to make better macro decisions
+    public static Direction[] rubblePathfinder(
+        RubbleGrid rubbleGrid,
+        MapLocation rcLocation,
+        MapLocation targetLocation,
+        RobotController rc,
+        Direction[] lastThreeMoves
+    )
+        throws GameActionException {
+        // if you're already in the right grid square, just use the regular pathfinding algorithm
+        if (rubbleGrid.sameGridSquare(rcLocation, targetLocation)) {
+            return pathfinder(targetLocation, rc, lastThreeMoves);
+        }
+        // otherwise find the best grid square to go to, and use pathfinder algorithm to go there
+        int[] rcGridIndices = rubbleGrid.gridIndexFromLocation(rcLocation);
+        Direction direction = rcLocation.directionTo(targetLocation);
+
+        int[] straightGridSquare = rubbleGrid.gridSquareInDirection(rcGridIndices, direction);
+        int[] rightGridSquare = rubbleGrid.gridSquareInDirection(rcGridIndices, direction.rotateRight());
+        int[] leftGridSquare = rubbleGrid.gridSquareInDirection(rcGridIndices, direction.rotateLeft());
+
+        int straightScore = rubbleGrid.rubbleScoreAtGridSquare(straightGridSquare);
+        int rightScore = rubbleGrid.rubbleScoreAtGridSquare(rightGridSquare) + 2;
+        int leftScore = rubbleGrid.rubbleScoreAtGridSquare(leftGridSquare) + 2;
+
+        MapLocation intermediateTarget = null;
+        if (straightScore <= rightScore && straightScore <= leftScore) {
+            intermediateTarget = rubbleGrid.centerLocation(straightGridSquare);
+        } else if (rightScore <= straightScore && rightScore <= leftScore) {
+            intermediateTarget = rubbleGrid.centerLocation(rightGridSquare);
+        } else {
+            intermediateTarget = rubbleGrid.centerLocation(leftGridSquare);
+        }
+        return pathfinder(intermediateTarget, rc, lastThreeMoves);
+    }
+
     public static void addEnemyArchon(RobotController rc, MapLocation loc) throws GameActionException {
         int encoding = loc.x * 100 + loc.y;
         for (int i = enemyArchonStartIndex; i < enemyArchonStopIndex; i++) {
