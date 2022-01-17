@@ -86,11 +86,7 @@ public strictfp class Miner {
             }
         }
 
-        RobotInfo[] enemies = rc.senseNearbyRobots(visionRadiusSquared, opponent);
-        for (RobotInfo enemy : enemies) {
-            if (enemy.getType().equals(RobotType.ARCHON)) RobotPlayer.addEnemyArchon(rc, enemy.getLocation());
-        }
-        RobotPlayer.checkEnemyArchons(rc);
+        RobotPlayer.updateEnemyArchons(rc, visionRadiusSquared, opponent);
 
         MapLocation[] nearbyLocations = rc.getAllLocationsWithinRadiusSquared(rcLocation, visionRadiusSquared);
         rubbleGrid.updateGridFromNearbyLocations(rcLocation, nearbyLocations);

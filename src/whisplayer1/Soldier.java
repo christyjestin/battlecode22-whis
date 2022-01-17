@@ -95,11 +95,7 @@ public strictfp class Soldier {
         if (exploreDest == null) exploreDest = reserveMode ? center : randomLocation(rc);
         if (rubbleGrid == null) rubbleGrid = new RubbleGrid(rc, visionRadiusSquared, mapHeight, mapWidth);
 
-        RobotInfo[] enemies = rc.senseNearbyRobots(visionRadiusSquared, opponent);
-        for (RobotInfo enemy : enemies) {
-            if (enemy.getType().equals(RobotType.ARCHON)) RobotPlayer.addEnemyArchon(rc, enemy.getLocation());
-        }
-        RobotPlayer.checkEnemyArchons(rc);
+        RobotPlayer.updateEnemyArchons(rc, visionRadiusSquared, opponent);
 
         MapLocation rcLocation = rc.getLocation();
         MapLocation[] nearbyLocations = rc.getAllLocationsWithinRadiusSquared(rcLocation, visionRadiusSquared);
@@ -109,6 +105,7 @@ public strictfp class Soldier {
 
         // Try to attack someone
         MapLocation target = null;
+        RobotInfo[] enemies = rc.senseNearbyRobots(visionRadiusSquared, opponent);
         for (RobotInfo enemy : enemies) {
             MapLocation loc = enemy.getLocation();
             if (rc.canAttack(loc)) {

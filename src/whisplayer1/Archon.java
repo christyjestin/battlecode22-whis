@@ -31,6 +31,7 @@ public strictfp class Archon {
     static Direction towardsRight = null;
     static Direction towardsLeft = null;
     static Direction[] centerDirections = null;
+    static RubbleGrid rubbleGrid = null;
 
     // check if it is this archon's turn to spawn
     static boolean myTurn(RobotController rc, int index) throws GameActionException {
@@ -95,6 +96,13 @@ public strictfp class Archon {
         if (centerDirections == null) centerDirections = new Direction[] { towardsRight, towardsCenter, towardsLeft };
         if (team == null) team = rc.getTeam();
         if (opponent == null) opponent = team.opponent();
+        if (rubbleGrid == null) rubbleGrid = new RubbleGrid(rc, visionRadiusSquared, mapHeight, mapWidth);
+
+        MapLocation rcLocation = rc.getLocation();
+        MapLocation[] nearbyLocations = rc.getAllLocationsWithinRadiusSquared(rcLocation, visionRadiusSquared);
+        rubbleGrid.updateGridFromNearbyLocations(rcLocation, nearbyLocations);
+
+        RobotPlayer.updateEnemyArchons(rc, visionRadiusSquared, opponent);
 
         // write this archon's health and find out the lowest health on your team
         // I placed this function call up here because it needs to happen on every turn (i.e. before

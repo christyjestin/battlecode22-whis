@@ -182,6 +182,15 @@ public strictfp class RobotPlayer {
         }
     }
 
+    public static void updateEnemyArchons(RobotController rc, int visionRadiusSquared, Team opponent)
+        throws GameActionException {
+        RobotInfo[] enemies = rc.senseNearbyRobots(visionRadiusSquared, opponent);
+        for (RobotInfo enemy : enemies) {
+            if (enemy.getType().equals(RobotType.ARCHON)) addEnemyArchon(rc, enemy.getLocation());
+        }
+        checkEnemyArchons(rc);
+    }
+
     public static MapLocation retrieveLocationfromArray(RobotController rc, int index) throws GameActionException {
         int encoding = rc.readSharedArray(index);
         return new MapLocation(encoding / 100, encoding % 100);
