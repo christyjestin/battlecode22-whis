@@ -32,7 +32,7 @@ public strictfp class Soldier {
     static MapLocation center = null;
     static Direction[] lastThreeMoves = { null, null, null };
     static Direction nextMove = null;
-    static LeadGrid leadGrid = null;
+    static RubbleGrid rubbleGrid = null;
 
     static MapLocation randomLocation(RobotController rc) throws GameActionException {
         if (mapHeight == -1) mapHeight = rc.getMapHeight();
@@ -93,11 +93,11 @@ public strictfp class Soldier {
         if (center == null) center = new MapLocation(mapWidth / 2, mapHeight / 2);
         if (opponent == null) opponent = rc.getTeam().opponent();
         if (exploreDest == null) exploreDest = reserveMode ? center : randomLocation(rc);
-        if (leadGrid == null) leadGrid = new LeadGrid(rc, visionRadiusSquared, mapHeight, mapWidth);
+        if (rubbleGrid == null) rubbleGrid = new RubbleGrid(rc, visionRadiusSquared, mapHeight, mapWidth);
 
         MapLocation rcLocation = rc.getLocation();
         MapLocation[] nearbyLocations = rc.getAllLocationsWithinRadiusSquared(rcLocation, visionRadiusSquared);
-        leadGrid.updateGridFromNearbyLocations(rcLocation, nearbyLocations);
+        rubbleGrid.updateGridFromNearbyLocations(rcLocation, nearbyLocations);
         RobotPlayer.checkEnemyArchons(rc);
 
         if (!rc.isActionReady() && !rc.isMovementReady()) return;

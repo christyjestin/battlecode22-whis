@@ -26,7 +26,7 @@ public strictfp class Miner {
     static boolean reportedDeath = false;
     static Direction[] lastThreeMoves = { null, null, null };
     static Direction nextMove = null;
-    static LeadGrid leadGrid = null;
+    static RubbleGrid rubbleGrid = null;
     static boolean exploreMode = true;
     static MapLocation exploreDest = null;
 
@@ -90,7 +90,7 @@ public strictfp class Miner {
         if (mapWidth == -1) mapWidth = rc.getMapWidth();
         if (opponent == null) opponent = rc.getTeam().opponent();
         if (exploreDest == null) exploreDest = randomLocation(rc);
-        if (leadGrid == null) leadGrid = new LeadGrid(rc, visionRadiusSquared, mapHeight, mapWidth);
+        if (rubbleGrid == null) rubbleGrid = new RubbleGrid(rc, visionRadiusSquared, mapHeight, mapWidth);
 
         // Try to mine on squares around us.
         MapLocation rcLocation = rc.getLocation();
@@ -107,7 +107,7 @@ public strictfp class Miner {
         }
 
         MapLocation[] nearbyLocations = rc.getAllLocationsWithinRadiusSquared(rcLocation, visionRadiusSquared);
-        leadGrid.updateGridFromNearbyLocations(rcLocation, nearbyLocations);
+        rubbleGrid.updateGridFromNearbyLocations(rcLocation, nearbyLocations);
 
         MapLocation targetLocation = null;
         int closestGold = 7200;
