@@ -27,6 +27,7 @@ public strictfp class Miner {
     static boolean reportedDeath = false;
     static Direction[] lastThreeMoves = { null, null, null };
     static Direction nextMove = null;
+    static RubbleGrid rubbleGrid = null;
 
     // bool indicating whether the miner is assigned to watch lead deposits near archons
     static Boolean archonDeposit = null;
@@ -69,12 +70,13 @@ public strictfp class Miner {
         if (mapWidth == -1) mapWidth = rc.getMapWidth();
         if (opponent == null) opponent = rc.getTeam().opponent();
         if (destination == null) destination = randomLocation(rc);
+        if (rubbleGrid == null) rubbleGrid = new RubbleGrid(rc, visionRadiusSquared, mapHeight, mapWidth);
 
         // Try to mine on squares around us.
-        MapLocation me = rc.getLocation();
+        MapLocation rcLocation = rc.getLocation();
         for (int dx = -1; dx <= 1; dx++) {
             for (int dy = -1; dy <= 1; dy++) {
-                MapLocation mineLocation = new MapLocation(me.x + dx, me.y + dy);
+                MapLocation mineLocation = new MapLocation(rcLocation.x + dx, rcLocation.y + dy);
                 while (rc.canMineGold(mineLocation)) {
                     rc.mineGold(mineLocation);
                 }
@@ -84,32 +86,34 @@ public strictfp class Miner {
             }
         }
 
+        RobotInfo[] enemies = rc.senseNearbyRobots(visionRadiusSquared, opponent);
+        for (RobotInfo enemy : enemies) {
+            if (enemy.getType().equals(RobotType.ARCHON)) RobotPlayer.addEnemyArchon(rc, enemy.getLocation());
+        }
+        RobotPlayer.checkEnemyArchons(rc);
+
+        MapLocation[] nearbyLocations = rc.getAllLocationsWithinRadiusSquared(rcLocation, visionRadiusSquared);
+        rubbleGrid.updateGridFromNearbyLocations(rcLocation, nearbyLocations);
+
         // return immediately if you can't move
         if (!rc.isMovementReady()) return;
-
-        MapLocation[] nearbyLocations = rc.getAllLocationsWithinRadiusSquared(me, visionRadiusSquared);
 
         MapLocation targetLocation = null;
         int targetScore = -3600;
 
-        for (MapLocation tryLocation : nearbyLocations) {
+        for (MapLocation location : nearbyLocations) {
             // ignore the location if another robot is already there
-            if (rc.senseRobotAtLocation(tryLocation) != null) continue;
+            if (rc.canSenseRobotAtLocation(location)) continue;
 
-            int gold = rc.senseGold(tryLocation);
-            int lead = rc.senseLead(tryLocation);
+            int gold = rc.senseGold(location);
+            int lead = rc.senseLead(location);
             if (gold > 0 || lead > 1) {
-                int score = 100 * gold + 10 * lead - me.distanceSquaredTo(tryLocation);
+                int score = 100 * gold + 10 * lead - rcLocation.distanceSquaredTo(location);
                 if (score > targetScore) {
-                    targetLocation = tryLocation;
+                    targetLocation = location;
                     targetScore = score;
                 }
             }
-        }
-
-        RobotInfo[] enemies = rc.senseNearbyRobots(visionRadiusSquared, opponent);
-        for (RobotInfo enemy : enemies) {
-            if (enemy.getType().equals(RobotType.ARCHON)) RobotPlayer.addEnemyArchon(rc, enemy.getLocation());
         }
 
         // move using pathfinder algorithm

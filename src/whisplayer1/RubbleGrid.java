@@ -17,7 +17,8 @@ public strictfp class RubbleGrid {
     int gridWidth;
     int visionRadiusSquared; // visionRadiusSquared of the rc using this LeadGrid
     double rawValuePerLevel; // how much lead each grid square needs to have in total to go up a level
-    final double rubbleLevelMultiplier = 20.0; // rawValuePerLevel = area of a grid square x this multiplier
+    // rawValuePerLevel = area of a grid square x this multiplier
+    final double rubbleLevelMultiplier = GameConstants.MAX_RUBBLE / 7.0;
 
     public RubbleGrid(RobotController rc, int visionRadiusSquared, int mapHeight, int mapWidth) {
         this.rc = rc;
@@ -51,7 +52,7 @@ public strictfp class RubbleGrid {
         int encoding = 0;
         for (int i = 0; i < gridSize; i++) {
             // times 8, plus next value (but written w/ bitwise operators)
-            encoding = (encoding << 3) | grid[i / gridCols][i % gridCols];
+            encoding = (encoding << 3) | grid[i % gridCols][i / gridCols];
             // 5 grid positions per array index
             if (i % 5 == 4) {
                 array[arrayIndex] = encoding;
@@ -68,7 +69,7 @@ public strictfp class RubbleGrid {
             // go in reverse order while decoding
             for (int j = 5 * i + 4; j >= 5 * i; j--) {
                 // equivalent to % 8 in bitwise
-                grid[j / gridCols][j % gridCols] = encoding & 7;
+                grid[j % gridCols][j / gridCols] = encoding & 7;
                 // divide by 8
                 encoding = encoding >> 3;
             }
@@ -97,7 +98,7 @@ public strictfp class RubbleGrid {
             for (int j = 0; j < gridRows; j++) {
                 if (canWrite[i][j] != null && canWrite[i][j]) {
                     grid[i][j] = (int) Math.ceil(rawValues[i][j] / rawValuePerLevel);
-                    // max level in grid is 7
+                    // max level in grid is 7; should not be necessary based on rubble level multiplier
                     if (grid[i][j] > 7) grid[i][j] = 7;
                 }
             }
@@ -117,6 +118,12 @@ public strictfp class RubbleGrid {
     // calculate the grid index containing this map location
     public int[] gridIndexFromLocation(MapLocation location) {
         return new int[] { location.x / gridWidth, location.y / gridHeight };
+    }
+
+    // return the rubble score at this map location
+    public int rubbleScoreAtLocation(MapLocation location) {
+        int[] indices = gridIndexFromLocation(location);
+        return grid[indices[0]][indices[1]];
     }
 
     // checks if the rc can see the entire grid square based on its current location
