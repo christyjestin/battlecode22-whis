@@ -27,6 +27,7 @@ public strictfp class Miner {
     static boolean reportedDeath = false;
     static Direction[] lastThreeMoves = { null, null, null };
     static Direction nextMove = null;
+    static LeadGrid leadGrid = null;
 
     // bool indicating whether the miner is assigned to watch lead deposits near archons
     static Boolean archonDeposit = null;
@@ -69,6 +70,7 @@ public strictfp class Miner {
         if (mapWidth == -1) mapWidth = rc.getMapWidth();
         if (opponent == null) opponent = rc.getTeam().opponent();
         if (destination == null) destination = randomLocation(rc);
+        if (leadGrid == null) leadGrid = new LeadGrid(rc, visionRadiusSquared, mapHeight, mapWidth);
 
         // Try to mine on squares around us.
         MapLocation me = rc.getLocation();
@@ -88,6 +90,7 @@ public strictfp class Miner {
         if (!rc.isMovementReady()) return;
 
         MapLocation[] nearbyLocations = rc.getAllLocationsWithinRadiusSquared(me, visionRadiusSquared);
+        leadGrid.updateGridFromNearbyLocations(me, nearbyLocations);
 
         MapLocation targetLocation = null;
         int targetScore = -3600;

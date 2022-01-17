@@ -58,7 +58,6 @@ public strictfp class Soldier {
             int val = rc.readSharedArray(i);
             if (val != 0 && val < minHealth) minHealth = val;
         }
-        System.out.println("minHealth:" + minHealth);
         return minHealth;
     }
 
