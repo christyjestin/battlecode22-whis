@@ -32,6 +32,7 @@ public strictfp class Soldier {
     static MapLocation center = null;
     static Direction[] lastThreeMoves = { null, null, null };
     static Direction nextMove = null;
+    static LeadGrid leadGrid = null;
 
     static MapLocation randomLocation(RobotController rc) throws GameActionException {
         if (mapHeight == -1) mapHeight = rc.getMapHeight();
@@ -86,14 +87,20 @@ public strictfp class Soldier {
             reportedDeath = true;
         }
 
-        if (!rc.isActionReady() && !rc.isMovementReady()) return;
-
         // init code
         if (mapWidth == -1) mapWidth = rc.getMapWidth();
         if (mapHeight == -1) mapHeight = rc.getMapHeight();
         if (center == null) center = new MapLocation(mapWidth / 2, mapHeight / 2);
         if (opponent == null) opponent = rc.getTeam().opponent();
         if (exploreDest == null) exploreDest = reserveMode ? center : randomLocation(rc);
+        if (leadGrid == null) leadGrid = new LeadGrid(rc, visionRadiusSquared, mapHeight, mapWidth);
+
+        MapLocation rcLocation = rc.getLocation();
+        MapLocation[] nearbyLocations = rc.getAllLocationsWithinRadiusSquared(rcLocation, visionRadiusSquared);
+        leadGrid.updateGridFromNearbyLocations(rcLocation, nearbyLocations);
+        RobotPlayer.checkEnemyArchons(rc);
+
+        if (!rc.isActionReady() && !rc.isMovementReady()) return;
 
         // Try to attack someone
         RobotInfo[] enemies = rc.senseNearbyRobots(actionRadiusSquared, opponent);
@@ -111,8 +118,6 @@ public strictfp class Soldier {
                 }
             }
         }
-
-        RobotPlayer.checkEnemyArchons(rc);
 
         if (target != null) rc.attack(target);
 

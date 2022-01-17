@@ -18,7 +18,6 @@ public strictfp class Miner {
         Direction.NORTHWEST,
     };
 
-    static MapLocation destination = null;
     static final int visionRadiusSquared = RobotType.MINER.visionRadiusSquared;
     static final int actionRadiusSquared = RobotType.MINER.actionRadiusSquared;
     static int mapHeight = -1;
@@ -28,6 +27,8 @@ public strictfp class Miner {
     static Direction[] lastThreeMoves = { null, null, null };
     static Direction nextMove = null;
     static LeadGrid leadGrid = null;
+    static boolean exploreMode = true;
+    static MapLocation exploreDest = null;
 
     // bool indicating whether the miner is assigned to watch lead deposits near archons
     static Boolean archonDeposit = null;
@@ -58,6 +59,25 @@ public strictfp class Miner {
         return new MapLocation(rng.nextInt(mapWidth), rng.nextInt(mapHeight));
     }
 
+    static MapLocation closestLeadLocation(RobotController rc, MapLocation rcLocation) throws GameActionException {
+        MapLocation[] leadLocations = rc.senseNearbyLocationsWithLead(visionRadiusSquared);
+        MapLocation closestLocation = null;
+        int leastDistance = 7200;
+        for (MapLocation location : leadLocations) {
+            // ignore the location if another robot is already there
+            if (rc.canSenseRobotAtLocation(location)) continue;
+            int lead = rc.senseLead(location);
+            if (lead > 1) {
+                int distance = rcLocation.distanceSquaredTo(location);
+                if (distance < leastDistance) {
+                    closestLocation = location;
+                    leastDistance = distance;
+                }
+            }
+        }
+        return closestLocation;
+    }
+
     static void runMiner(RobotController rc) throws GameActionException {
         // report likely miner death
         if (rc.getHealth() < 6 && !reportedDeath) {
@@ -69,14 +89,14 @@ public strictfp class Miner {
         if (mapHeight == -1) mapHeight = rc.getMapHeight();
         if (mapWidth == -1) mapWidth = rc.getMapWidth();
         if (opponent == null) opponent = rc.getTeam().opponent();
-        if (destination == null) destination = randomLocation(rc);
+        if (exploreDest == null) exploreDest = randomLocation(rc);
         if (leadGrid == null) leadGrid = new LeadGrid(rc, visionRadiusSquared, mapHeight, mapWidth);
 
         // Try to mine on squares around us.
-        MapLocation me = rc.getLocation();
+        MapLocation rcLocation = rc.getLocation();
         for (int dx = -1; dx <= 1; dx++) {
             for (int dy = -1; dy <= 1; dy++) {
-                MapLocation mineLocation = new MapLocation(me.x + dx, me.y + dy);
+                MapLocation mineLocation = new MapLocation(rcLocation.x + dx, rcLocation.y + dy);
                 while (rc.canMineGold(mineLocation)) {
                     rc.mineGold(mineLocation);
                 }
@@ -86,27 +106,18 @@ public strictfp class Miner {
             }
         }
 
-        // return immediately if you can't move
-        if (!rc.isMovementReady()) return;
-
-        MapLocation[] nearbyLocations = rc.getAllLocationsWithinRadiusSquared(me, visionRadiusSquared);
-        leadGrid.updateGridFromNearbyLocations(me, nearbyLocations);
+        MapLocation[] nearbyLocations = rc.getAllLocationsWithinRadiusSquared(rcLocation, visionRadiusSquared);
+        leadGrid.updateGridFromNearbyLocations(rcLocation, nearbyLocations);
 
         MapLocation targetLocation = null;
-        int targetScore = -3600;
-
-        for (MapLocation tryLocation : nearbyLocations) {
+        int closestGold = 7200;
+        MapLocation[] goldLocations = rc.senseNearbyLocationsWithGold(visionRadiusSquared);
+        for (MapLocation goldLocation : goldLocations) {
             // ignore the location if another robot is already there
-            if (rc.senseRobotAtLocation(tryLocation) != null) continue;
-
-            int gold = rc.senseGold(tryLocation);
-            int lead = rc.senseLead(tryLocation);
-            if (gold > 0 || lead > 1) {
-                int score = 100 * gold + 10 * lead - me.distanceSquaredTo(tryLocation);
-                if (score > targetScore) {
-                    targetLocation = tryLocation;
-                    targetScore = score;
-                }
+            if (rc.canSenseRobotAtLocation(goldLocation)) continue;
+            if (rcLocation.distanceSquaredTo(goldLocation) < closestGold) {
+                closestGold = rcLocation.distanceSquaredTo(goldLocation);
+                targetLocation = goldLocation;
             }
         }
 
@@ -115,13 +126,24 @@ public strictfp class Miner {
             if (enemy.getType().equals(RobotType.ARCHON)) RobotPlayer.addEnemyArchon(rc, enemy.getLocation());
         }
 
+        // return immediately if you can't move
+        if (!rc.isMovementReady()) return;
+
         // move using pathfinder algorithm
         if (targetLocation == null) {
-            // randomly generate a new destination if you're already there
-            if (rc.getLocation().distanceSquaredTo(destination) < visionRadiusSquared / 2) {
-                destination = randomLocation(rc);
+            // randomly generate a new destination to explore if you're already close
+            if (rcLocation.distanceSquaredTo(exploreDest) < visionRadiusSquared / 2) {
+                exploreDest = randomLocation(rc);
             }
-            targetLocation = destination;
+            MapLocation nearestLeadDeposit = leadGrid.nearestLeadDeposit(rcLocation);
+            exploreMode = nearestLeadDeposit == null;
+            targetLocation = exploreMode ? exploreDest : nearestLeadDeposit;
+            // if you're going towards a lead deposit, and you're already in the right grid square, then go towards the nearest lead
+            if (!exploreMode && leadGrid.sameGridSquare(rcLocation, targetLocation)) {
+                targetLocation = closestLeadLocation(rc, rcLocation);
+                // if all of the lead nearby is already being mined, keep exploring
+                if (targetLocation == null) targetLocation = exploreDest;
+            }
         }
 
         if (nextMove == null) {
