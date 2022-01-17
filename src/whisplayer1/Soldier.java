@@ -87,8 +87,6 @@ public strictfp class Soldier {
             reportedDeath = true;
         }
 
-        if (!rc.isActionReady() && !rc.isMovementReady()) return;
-
         // init code
         if (mapWidth == -1) mapWidth = rc.getMapWidth();
         if (mapHeight == -1) mapHeight = rc.getMapHeight();
@@ -96,24 +94,23 @@ public strictfp class Soldier {
         if (opponent == null) opponent = rc.getTeam().opponent();
         if (exploreDest == null) exploreDest = reserveMode ? center : randomLocation(rc);
 
+        RobotInfo[] enemies = rc.senseNearbyRobots(visionRadiusSquared, opponent);
+        for (RobotInfo enemy : enemies) {
+            if (enemy.getType().equals(RobotType.ARCHON)) RobotPlayer.addEnemyArchon(rc, enemy.getLocation());
+        }
+        RobotPlayer.checkEnemyArchons(rc);
+
+        if (!rc.isActionReady() && !rc.isMovementReady()) return;
+
         // Try to attack someone
-        RobotInfo[] enemies = rc.senseNearbyRobots(actionRadiusSquared, opponent);
         MapLocation target = null;
         for (RobotInfo enemy : enemies) {
             MapLocation loc = enemy.getLocation();
             if (rc.canAttack(loc)) {
-                if (enemy.getType().equals(RobotType.ARCHON)) {
-                    RobotPlayer.addEnemyArchon(rc, loc);
-                    rc.attack(loc);
-                    target = null;
-                    break;
-                } else {
-                    target = loc;
-                }
+                target = loc;
+                if (enemy.getType().equals(RobotType.ARCHON)) break;
             }
         }
-
-        RobotPlayer.checkEnemyArchons(rc);
 
         if (target != null) rc.attack(target);
 

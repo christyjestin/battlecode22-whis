@@ -84,6 +84,11 @@ public strictfp class Miner {
             }
         }
 
+        RobotInfo[] enemies = rc.senseNearbyRobots(visionRadiusSquared, opponent);
+        for (RobotInfo enemy : enemies) {
+            if (enemy.getType().equals(RobotType.ARCHON)) RobotPlayer.addEnemyArchon(rc, enemy.getLocation());
+        }
+
         // return immediately if you can't move
         if (!rc.isMovementReady()) return;
 
@@ -105,11 +110,6 @@ public strictfp class Miner {
                     targetScore = score;
                 }
             }
-        }
-
-        RobotInfo[] enemies = rc.senseNearbyRobots(visionRadiusSquared, opponent);
-        for (RobotInfo enemy : enemies) {
-            if (enemy.getType().equals(RobotType.ARCHON)) RobotPlayer.addEnemyArchon(rc, enemy.getLocation());
         }
 
         // move using pathfinder algorithm
