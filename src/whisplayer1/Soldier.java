@@ -3,7 +3,7 @@ package whisplayer1;
 import battlecode.common.*;
 import java.util.Random;
 
-public class Soldier {
+public strictfp class Soldier {
 
     static final Random rng = new Random();
 

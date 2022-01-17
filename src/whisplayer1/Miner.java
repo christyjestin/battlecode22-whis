@@ -1,7 +1,6 @@
 package whisplayer1;
 
 import battlecode.common.*;
-import java.lang.Math;
 import java.util.Random;
 
 public strictfp class Miner {
