@@ -45,6 +45,15 @@ public strictfp class Archon {
         return true;
     }
 
+    static int nearbyBuildersCount(RobotController rc) throws GameActionException {
+        int counter = 0;
+        RobotInfo[] nearbyBots = rc.senseNearbyRobots(visionRadiusSquared, ownTeam);
+        for (RobotInfo bot : nearbyBots) {
+            if (bot.getType().equals(RobotType.BUILDER)) counter++;
+        }
+        return counter;
+    }
+
     // write the archon's health to the shared array and get the minimum health of all archons
     static int minArchonHealth(RobotController rc) throws GameActionException {
         int health = rc.getHealth();
@@ -102,6 +111,17 @@ public strictfp class Archon {
         // stop early if you already have robots on over a third of the map, if it's not your turn,
         // if you can't spawn, or if there's too little lead
         if (tooManyBots || !myTurn(rc, archonIndex) || !rc.isActionReady() || tooLittleLead) return;
+
+        // spawn 2 builders next to each archon
+        if (nearbyBuildersCount(rc) < 2 && rc.getRobotCount() > 10) {
+            Direction spawnDirection = RobotPlayer.findBestSpawnDirection(rc);
+            if (rc.canBuildRobot(RobotType.BUILDER, spawnDirection)) {
+                rc.buildRobot(RobotType.BUILDER, spawnDirection);
+                RobotPlayer.incrementArray(rc, RobotPlayer.builderCountIndex + archonIndex);
+                RobotPlayer.incrementArray(rc, RobotPlayer.archonSpawnStartIndex + archonIndex);
+                return;
+            }
+        }
 
         // spawn both miners and soldiers in a dynamic ratio
         RobotInfo[] nearbyEnemies = rc.senseNearbyRobots(visionRadiusSquared, opponent);

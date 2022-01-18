@@ -55,8 +55,10 @@ public strictfp class RobotPlayer {
                     case LABORATORY:
                         Laboratory.runLaboratory(rc);
                         break;
-                    case WATCHTOWER:
                     case BUILDER:
+                        Builder.runBuilder(rc);
+                        break;
+                    case WATCHTOWER:
                     case SAGE:
                         break;
                 }
@@ -93,7 +95,7 @@ public strictfp class RobotPlayer {
         throws GameActionException {
         Direction targetDirection = rc.getLocation().directionTo(targetLocation);
         if (targetDirection.equals(Direction.CENTER)) {
-            Direction[] ret = { lastThreeMoves[1], lastThreeMoves[2], Direction.CENTER };
+            Direction[] ret = { lastThreeMoves[1], lastThreeMoves[2], Direction.CENTER, null };
             return ret;
         }
         Direction[] possibleMoves = {
@@ -171,6 +173,10 @@ public strictfp class RobotPlayer {
         }
     }
 
+    public static boolean fixedPositionType(RobotType type) throws GameActionException {
+        return type.equals(RobotType.ARCHON) || type.equals(RobotType.BUILDER) || type.equals(RobotType.LABORATORY);
+    }
+
     // check if shared array's locations for enemy archons are still accurate
     public static void checkEnemyArchons(RobotController rc) throws GameActionException {
         for (int i = enemyArchonStartIndex; i < enemyArchonStopIndex; i++) {
@@ -191,6 +197,22 @@ public strictfp class RobotPlayer {
             if (enemy.getType().equals(RobotType.ARCHON)) addEnemyArchon(rc, enemy.getLocation());
         }
         checkEnemyArchons(rc);
+    }
+
+    static Direction findBestSpawnDirection(RobotController rc) throws GameActionException {
+        int minRubble = GameConstants.MAX_RUBBLE + 1;
+        Direction bestDirection = null;
+        for (Direction direction : directions) {
+            MapLocation loc = rc.adjacentLocation(direction);
+            // skip this location if there's an archon there
+            if (rc.canSenseRobotAtLocation(loc) && fixedPositionType(rc.senseRobotAtLocation(loc).getType())) continue;
+            int rubble = rc.senseRubble(loc);
+            if (rubble < minRubble) {
+                minRubble = rubble;
+                bestDirection = direction;
+            }
+        }
+        return bestDirection;
     }
 
     public static MapLocation retrieveLocationfromArray(RobotController rc, int index) throws GameActionException {
