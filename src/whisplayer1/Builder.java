@@ -15,8 +15,8 @@ public strictfp class Builder {
         Direction.NORTHWEST,
     };
 
-    static final int visionRadiusSquared = RobotType.LABORATORY.visionRadiusSquared;
-    static final int actionRadiusSquared = RobotType.LABORATORY.actionRadiusSquared;
+    static final int visionRadiusSquared = RobotType.BUILDER.visionRadiusSquared;
+    static final int actionRadiusSquared = RobotType.BUILDER.actionRadiusSquared;
     static Team ownTeam = null;
     static Team opponent = null;
     static MapLocation archonLocation = null;

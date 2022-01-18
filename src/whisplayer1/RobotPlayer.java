@@ -80,7 +80,11 @@ public strictfp class RobotPlayer {
         for (Direction move : lastThreeMoves) {
             if (move == null || move.equals(Direction.CENTER)) return false;
         }
-        return lastThreeMoves[0].equals(lastThreeMoves[2]) && lastThreeMoves[1].equals(nextMove);
+        return (
+            !lastThreeMoves[0].equals(lastThreeMoves[1]) &&
+            lastThreeMoves[0].equals(lastThreeMoves[2]) &&
+            lastThreeMoves[1].equals(nextMove)
+        );
     }
 
     public static Direction turnLeft(Direction dir) {
