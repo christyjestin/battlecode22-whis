@@ -7,23 +7,12 @@ public strictfp class Soldier {
 
     static final Random rng = new Random();
 
-    static final Direction[] directions = {
-        Direction.NORTH,
-        Direction.NORTHEAST,
-        Direction.EAST,
-        Direction.SOUTHEAST,
-        Direction.SOUTH,
-        Direction.SOUTHWEST,
-        Direction.WEST,
-        Direction.NORTHWEST,
-    };
-
     static MapLocation exploreDest = null;
-    static MapLocation targetLocation = null;
     static int visionRadiusSquared = RobotType.SOLDIER.visionRadiusSquared;
     static int actionRadiusSquared = RobotType.SOLDIER.actionRadiusSquared;
     static int mapWidth = -1;
     static int mapHeight = -1;
+    static Team ownTeam = null;
     static Team opponent = null;
     static boolean reportedDeath = false;
     static Boolean defenseMode = null;
@@ -34,17 +23,15 @@ public strictfp class Soldier {
     static Direction nextMove = null;
 
     static MapLocation randomLocation(RobotController rc) throws GameActionException {
-        if (mapHeight == -1) mapHeight = rc.getMapHeight();
-        if (mapWidth == -1) mapWidth = rc.getMapWidth();
         return new MapLocation(rng.nextInt(mapWidth), rng.nextInt(mapHeight));
     }
 
     static boolean isArchonAtLocation(RobotController rc, MapLocation loc) throws GameActionException {
-        return rc.canSenseRobotAtLocation(loc) && rc.senseRobotAtLocation(defendingLocation).type == RobotType.ARCHON;
+        return rc.canSenseRobotAtLocation(loc) && rc.senseRobotAtLocation(loc).getType().equals(RobotType.ARCHON);
     }
 
     static int nearbySoldiersCount(RobotController rc) throws GameActionException {
-        RobotInfo[] nearbyBots = rc.senseNearbyRobots(visionRadiusSquared, rc.getTeam());
+        RobotInfo[] nearbyBots = rc.senseNearbyRobots(visionRadiusSquared, ownTeam);
         int counter = 0;
         for (RobotInfo bot : nearbyBots) {
             if (bot.type.equals(RobotType.SOLDIER)) counter++;
@@ -58,7 +45,6 @@ public strictfp class Soldier {
             int val = rc.readSharedArray(i);
             if (val != 0 && val < minHealth) minHealth = val;
         }
-        System.out.println("minHealth:" + minHealth);
         return minHealth;
     }
 
@@ -91,37 +77,33 @@ public strictfp class Soldier {
         if (mapWidth == -1) mapWidth = rc.getMapWidth();
         if (mapHeight == -1) mapHeight = rc.getMapHeight();
         if (center == null) center = new MapLocation(mapWidth / 2, mapHeight / 2);
-        if (opponent == null) opponent = rc.getTeam().opponent();
+        if (ownTeam == null) ownTeam = rc.getTeam();
+        if (opponent == null) opponent = ownTeam.opponent();
         if (exploreDest == null) exploreDest = reserveMode ? center : randomLocation(rc);
 
-        RobotInfo[] enemies = rc.senseNearbyRobots(visionRadiusSquared, opponent);
-        for (RobotInfo enemy : enemies) {
-            if (enemy.getType().equals(RobotType.ARCHON)) RobotPlayer.addEnemyArchon(rc, enemy.getLocation());
-        }
-        RobotPlayer.checkEnemyArchons(rc);
+        RobotPlayer.updateEnemyArchons(rc, visionRadiusSquared, opponent);
 
         if (!rc.isActionReady() && !rc.isMovementReady()) return;
 
         // Try to attack someone
         MapLocation target = null;
+        RobotInfo[] enemies = rc.senseNearbyRobots(visionRadiusSquared, opponent);
         for (RobotInfo enemy : enemies) {
-            MapLocation loc = enemy.getLocation();
-            if (rc.canAttack(loc)) {
-                target = loc;
+            MapLocation enemyLocation = enemy.getLocation();
+            if (rc.canAttack(enemyLocation)) {
+                target = enemyLocation;
                 if (enemy.getType().equals(RobotType.ARCHON)) break;
             }
         }
-
         if (target != null) rc.attack(target);
 
         if (!rc.isMovementReady()) return;
 
-        targetLocation = exploreDest;
         // randomly generate a new target location if you get close enough to it, and you're not a reserve soldier
         if (!reserveMode && closeEnoughTo(rc, exploreDest, actionRadiusSquared / 2)) {
             exploreDest = randomLocation(rc);
-            targetLocation = exploreDest;
         }
+        MapLocation targetLocation = exploreDest;
 
         // note that currently, once defenseMode is set to false, it won't ever change
         if (defenseMode != null && defenseMode) {

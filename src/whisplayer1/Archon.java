@@ -20,10 +20,10 @@ public strictfp class Archon {
     };
 
     static MapLocation center = null;
-    static boolean wroteLocation = false;
+    static MapLocation rcLocation = null;
     static final int visionRadiusSquared = RobotType.ARCHON.visionRadiusSquared;
+    static Team ownTeam = null;
     static Team opponent = null;
-    static Team team = null;
     static int archonIndex = -1;
     static int mapWidth = -1;
     static int mapHeight = -1;
@@ -47,11 +47,6 @@ public strictfp class Archon {
 
     // write the archon's health to the shared array and get the minimum health of all archons
     static int minArchonHealth(RobotController rc) throws GameActionException {
-        if (archonIndex == -1) {
-            // retrieve an index for this archon
-            archonIndex = rc.readSharedArray(RobotPlayer.archonCounterIndex);
-            RobotPlayer.incrementArray(rc, RobotPlayer.archonCounterIndex);
-        }
         int health = rc.getHealth();
         int healthIndex = RobotPlayer.archonHealthStartIndex + archonIndex;
         int spawnIndex = RobotPlayer.archonSpawnStartIndex + archonIndex;
@@ -69,45 +64,47 @@ public strictfp class Archon {
 
     // write the archon's location to the shared array
     static void writeArchonLocation(RobotController rc) throws GameActionException {
-        if (archonIndex == -1) {
-            // retrieve an index for this archon
-            archonIndex = rc.readSharedArray(RobotPlayer.archonCounterIndex);
-            RobotPlayer.incrementArray(rc, RobotPlayer.archonCounterIndex);
-        }
-        int index = RobotPlayer.archonLocationStartIndex + archonIndex;
-        MapLocation loc = rc.getLocation();
-        rc.writeSharedArray(index, loc.x * 100 + loc.y);
-        wroteLocation = true;
+        rc.writeSharedArray(RobotPlayer.archonLocationStartIndex + archonIndex, rcLocation.x * 100 + rcLocation.y);
     }
 
     static void runArchon(RobotController rc) throws GameActionException {
+        // retrieve an index for this archon
+        if (archonIndex == -1) {
+            archonIndex = rc.readSharedArray(RobotPlayer.archonCounterIndex);
+            RobotPlayer.incrementArray(rc, RobotPlayer.archonCounterIndex);
+        }
+
         // write to shared array for defense
-        if (!wroteLocation) writeArchonLocation(rc);
+        if (rcLocation == null) {
+            rcLocation = rc.getLocation();
+            writeArchonLocation(rc);
+        }
 
         // init code code
         if (mapWidth == -1) mapWidth = rc.getMapWidth();
         if (mapHeight == -1) mapHeight = rc.getMapHeight();
         if (center == null) center = new MapLocation(mapWidth / 2, mapHeight / 2);
-        if (towardsCenter == null) towardsCenter = rc.getLocation().directionTo(center);
+        if (towardsCenter == null) towardsCenter = rcLocation.directionTo(center);
+        // randomly choose if a direction if the archon is already at the center of the map
         if (towardsCenter.equals(Direction.CENTER)) towardsCenter = directions[rng.nextInt(directions.length)];
         if (towardsRight == null) towardsCenter.rotateRight();
         if (towardsLeft == null) towardsCenter.rotateLeft();
         if (centerDirections == null) centerDirections = new Direction[] { towardsRight, towardsCenter, towardsLeft };
-        if (team == null) team = rc.getTeam();
-        if (opponent == null) opponent = team.opponent();
+        if (ownTeam == null) ownTeam = rc.getTeam();
+        if (opponent == null) opponent = ownTeam.opponent();
 
         // write this archon's health and find out the lowest health on your team
         // I placed this function call up here because it needs to happen on every turn (i.e. before
         // the return statement below)
         int lowestHealth = minArchonHealth(rc);
         boolean tooManyBots = rc.getRobotCount() > (mapHeight * mapWidth / 3);
-        boolean tooLittleLead = rc.getTeamLeadAmount(team) < RobotType.SOLDIER.buildCostLead;
+        boolean tooLittleLead = rc.getTeamLeadAmount(ownTeam) < RobotType.SOLDIER.buildCostLead;
         // stop early if you already have robots on over a third of the map, if it's not your turn,
         // if you can't spawn, or if there's too little lead
         if (tooManyBots || !myTurn(rc, archonIndex) || !rc.isActionReady() || tooLittleLead) return;
 
         // spawn both miners and soldiers in a dynamic ratio
-        RobotInfo[] nearbyEnemies = rc.senseNearbyRobots(visionRadiusSquared, rc.getTeam().opponent());
+        RobotInfo[] nearbyEnemies = rc.senseNearbyRobots(visionRadiusSquared, opponent);
         if (lowestHealth < RobotType.ARCHON.getMaxHealth(1) || nearbyEnemies.length > 0) {
             // spawn 10% miners, 90% soldiers
             ratio = 1;

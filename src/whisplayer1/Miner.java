@@ -7,17 +7,6 @@ public strictfp class Miner {
 
     static final Random rng = new Random();
 
-    static final Direction[] directions = {
-        Direction.NORTH,
-        Direction.NORTHEAST,
-        Direction.EAST,
-        Direction.SOUTHEAST,
-        Direction.SOUTH,
-        Direction.SOUTHWEST,
-        Direction.WEST,
-        Direction.NORTHWEST,
-    };
-
     static MapLocation destination = null;
     static final int visionRadiusSquared = RobotType.MINER.visionRadiusSquared;
     static final int actionRadiusSquared = RobotType.MINER.actionRadiusSquared;
@@ -27,29 +16,6 @@ public strictfp class Miner {
     static boolean reportedDeath = false;
     static Direction[] lastThreeMoves = { null, null, null };
     static Direction nextMove = null;
-
-    // bool indicating whether the miner is assigned to watch lead deposits near archons
-    static Boolean archonDeposit = null;
-
-    static double halfGridLength = -1;
-
-    // algorithm to randomly generate a location on grid based on miner's vision radius
-    static MapLocation generateLocation(RobotController rc) throws GameActionException {
-        // one square on our grid should be the same size as the inscribed square in the vision radius circle
-        if (halfGridLength == -1) halfGridLength = Math.sqrt(visionRadiusSquared / 2.0);
-
-        double fullGridLength = 2.0 * halfGridLength;
-        // number of squares to fill the map along each dimension
-        int gridHeight = (int) (Math.ceil(mapHeight / fullGridLength));
-        int gridWidth = (int) (Math.ceil(mapWidth / fullGridLength));
-        int x = (int) (rng.nextInt(gridWidth) * fullGridLength + halfGridLength);
-        int y = (int) (rng.nextInt(gridHeight) * fullGridLength + halfGridLength);
-
-        // x, y must be less than mapWidth and mapHeight in order to be a valid location
-        if (x > mapWidth - 1) x = mapWidth - 1;
-        if (y > mapHeight - 1) y = mapHeight - 1;
-        return new MapLocation(x, y);
-    }
 
     static MapLocation randomLocation(RobotController rc) throws GameActionException {
         if (mapHeight == -1) mapHeight = rc.getMapHeight();
@@ -71,10 +37,10 @@ public strictfp class Miner {
         if (destination == null) destination = randomLocation(rc);
 
         // Try to mine on squares around us.
-        MapLocation me = rc.getLocation();
+        MapLocation rcLocation = rc.getLocation();
         for (int dx = -1; dx <= 1; dx++) {
             for (int dy = -1; dy <= 1; dy++) {
-                MapLocation mineLocation = new MapLocation(me.x + dx, me.y + dy);
+                MapLocation mineLocation = new MapLocation(rcLocation.x + dx, rcLocation.y + dy);
                 while (rc.canMineGold(mineLocation)) {
                     rc.mineGold(mineLocation);
                 }
@@ -84,29 +50,26 @@ public strictfp class Miner {
             }
         }
 
-        RobotInfo[] enemies = rc.senseNearbyRobots(visionRadiusSquared, opponent);
-        for (RobotInfo enemy : enemies) {
-            if (enemy.getType().equals(RobotType.ARCHON)) RobotPlayer.addEnemyArchon(rc, enemy.getLocation());
-        }
+        RobotPlayer.updateEnemyArchons(rc, visionRadiusSquared, opponent);
 
         // return immediately if you can't move
         if (!rc.isMovementReady()) return;
 
-        MapLocation[] nearbyLocations = rc.getAllLocationsWithinRadiusSquared(me, visionRadiusSquared);
+        MapLocation[] nearbyLocations = rc.getAllLocationsWithinRadiusSquared(rcLocation, visionRadiusSquared);
 
         MapLocation targetLocation = null;
-        int targetScore = -3600;
+        int targetScore = -7200;
 
-        for (MapLocation tryLocation : nearbyLocations) {
+        for (MapLocation location : nearbyLocations) {
             // ignore the location if another robot is already there
-            if (rc.senseRobotAtLocation(tryLocation) != null) continue;
+            if (rc.canSenseRobotAtLocation(location)) continue;
 
-            int gold = rc.senseGold(tryLocation);
-            int lead = rc.senseLead(tryLocation);
+            int gold = rc.senseGold(location);
+            int lead = rc.senseLead(location);
             if (gold > 0 || lead > 1) {
-                int score = 100 * gold + 10 * lead - me.distanceSquaredTo(tryLocation);
+                int score = 100 * gold + 10 * lead - rcLocation.distanceSquaredTo(location);
                 if (score > targetScore) {
-                    targetLocation = tryLocation;
+                    targetLocation = location;
                     targetScore = score;
                 }
             }

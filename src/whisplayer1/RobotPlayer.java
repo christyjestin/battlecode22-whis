@@ -175,11 +175,20 @@ public strictfp class RobotPlayer {
             MapLocation a = new MapLocation(rc.readSharedArray(i) / 100, rc.readSharedArray(i) % 100);
             if (rc.canSenseLocation(a)) {
                 // reset array value if there's no robot at that index or if the robot there is not an archon
-                if (!rc.canSenseRobotAtLocation(a) || rc.senseRobotAtLocation(a).getType() != RobotType.ARCHON) {
+                if (!rc.canSenseRobotAtLocation(a) || !rc.senseRobotAtLocation(a).getType().equals(RobotType.ARCHON)) {
                     rc.writeSharedArray(i, 0);
                 }
             }
         }
+    }
+
+    public static void updateEnemyArchons(RobotController rc, int visionRadiusSquared, Team opponent)
+        throws GameActionException {
+        RobotInfo[] enemies = rc.senseNearbyRobots(visionRadiusSquared, opponent);
+        for (RobotInfo enemy : enemies) {
+            if (enemy.getType().equals(RobotType.ARCHON)) addEnemyArchon(rc, enemy.getLocation());
+        }
+        checkEnemyArchons(rc);
     }
 
     public static MapLocation retrieveLocationfromArray(RobotController rc, int index) throws GameActionException {
