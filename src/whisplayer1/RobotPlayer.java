@@ -53,6 +53,8 @@ public strictfp class RobotPlayer {
                         Soldier.runSoldier(rc);
                         break;
                     case LABORATORY:
+                        Laboratory.runLaboratory(rc);
+                        break;
                     case WATCHTOWER:
                     case BUILDER:
                     case SAGE:
