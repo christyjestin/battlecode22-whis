@@ -44,16 +44,6 @@ public strictfp class RobotPlayer {
             try {
                 switch (rc.getType()) {
                     case ARCHON:
-                        rc.setIndicatorString(
-                            rc.readSharedArray(56) +
-                            " " +
-                            rc.readSharedArray(57) +
-                            " " +
-                            rc.readSharedArray(58) +
-                            " " +
-                            rc.readSharedArray(59) +
-                            " "
-                        );
                         Archon.runArchon(rc);
                         break;
                     case MINER:

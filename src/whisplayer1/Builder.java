@@ -52,10 +52,12 @@ public strictfp class Builder {
         // mutate whenever we can
         if (rc.canMutate(archonLocation)) rc.mutate(archonLocation);
 
-        // prioritize healing archons
+        // prioritize healing archons and then laboratories
         RobotInfo archonInfo = rc.senseRobotAtLocation(archonLocation);
         if (archonInfo.getHealth() < RobotType.ARCHON.getMaxHealth(archonInfo.getLevel())) {
             if (rc.canRepair(archonLocation)) rc.repair(archonLocation);
+        } else if (laboratoryLocation != null && rc.canRepair(laboratoryLocation)) {
+            if (rc.canRepair(laboratoryLocation)) rc.repair(laboratoryLocation);
         } else {
             RobotInfo[] nearbyBots = rc.senseNearbyRobots(actionRadiusSquared, ownTeam);
             for (RobotInfo bot : nearbyBots) {
@@ -66,13 +68,15 @@ public strictfp class Builder {
                 }
             }
         }
-        // if (laboratoryId == -1 || !rc.canSenseRobot(laboratoryId)) {
-        //     Direction bestDirection = RobotPlayer.findBestSpawnDirection(rc);
-        //     if (rc.canBuildRobot(RobotType.LABORATORY, bestDirection)) {
-        //         rc.buildRobot(RobotType.LABORATORY, bestDirection);
-        //         laboratoryLocation = rc.adjacentLocation(bestDirection);
-        //         laboratoryId = rc.senseRobotAtLocation(laboratoryLocation).getID();
-        //     }
-        // }
+
+        // spawn a laboratory if you've already mutated the archon to level 2 and there is no laboratory
+        if (archonInfo.getLevel() == 2 && (laboratoryId == -1 || !rc.canSenseRobot(laboratoryId))) {
+            Direction bestDirection = RobotPlayer.findBestSpawnDirection(rc);
+            if (rc.canBuildRobot(RobotType.LABORATORY, bestDirection)) {
+                rc.buildRobot(RobotType.LABORATORY, bestDirection);
+                laboratoryLocation = rc.adjacentLocation(bestDirection);
+                laboratoryId = rc.senseRobotAtLocation(laboratoryLocation).getID();
+            }
+        }
     }
 }

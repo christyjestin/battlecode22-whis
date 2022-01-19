@@ -50,6 +50,14 @@ public strictfp class Archon {
         return true;
     }
 
+    static boolean noNearbyLaboratories(RobotController rc) throws GameActionException {
+        RobotInfo[] nearbyBots = rc.senseNearbyRobots(visionRadiusSquared, ownTeam);
+        for (RobotInfo bot : nearbyBots) {
+            if (bot.getType().equals(RobotType.LABORATORY)) return false;
+        }
+        return true;
+    }
+
     static int nearbyBuildersCount(RobotController rc) throws GameActionException {
         int counter = 0;
         RobotInfo[] nearbyBots = rc.senseNearbyRobots(visionRadiusSquared, ownTeam);
@@ -161,9 +169,11 @@ public strictfp class Archon {
             ratio = (total > 0) ? (10 * numSoldiers / total) : 10;
         }
 
-        // if this building can be mutated, and we have spawned enough bots in a reasonable ratio
-        // then don't spawn to build up lead
-        if (rc.getLevel() == 1 && rc.getRobotCount() > (mapHeight * mapWidth / 20) && ratio >= 4 && ratio <= 6) return;
+        // if we have spawned enough bots in a reasonable ratio, then don't spawn to build up lead
+        // only do this if we can either mutate to level 2 or build a laboratory
+        if (rc.getRobotCount() > (mapHeight * mapWidth / 40) && ratio >= 4 && ratio <= 6) {
+            if (rc.getLevel() == 1 || noNearbyLaboratories(rc)) return;
+        }
 
         int randomInt = rng.nextInt(10);
         RobotType spawnType = randomInt < ratio ? RobotType.MINER : RobotType.SOLDIER;
