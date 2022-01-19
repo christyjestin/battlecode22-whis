@@ -9,6 +9,7 @@ public strictfp class Deposit {
 
     static void addDeposits(RobotController rc, int visionRadiusSquared, int mapHeight, int mapWidth)
         throws GameActionException {
+        removeDeposits(rc, rc.getLocation(), mapHeight, mapWidth);
         HashMap<Integer[], Integer[]> map = new HashMap<>();
         MapLocation[] leadLocations = rc.senseNearbyLocationsWithLead(visionRadiusSquared);
         MapLocation[] goldLocations = rc.senseNearbyLocationsWithGold(visionRadiusSquared);
@@ -50,6 +51,27 @@ public strictfp class Deposit {
                 }
             }
             if (index != 0 && (lead / leadPerLevel) >= minLead) rc.writeSharedArray(index, encoding);
+        }
+    }
+
+    static void removeDeposits(RobotController rc, MapLocation rcLocation, int mapHeight, int mapWidth)
+        throws GameActionException {
+        for (int i = RobotPlayer.depositStartIndex; i < RobotPlayer.depositStopIndex; i++) {
+            int arrayVal = rc.readSharedArray(i);
+            if (arrayVal == 0) continue;
+            int[] decoded = decodeDeposit(arrayVal);
+            int x = 2 * decoded[0];
+            int y = 2 * decoded[1];
+            if (!shouldWrite(rc, new MapLocation(x, y), mapHeight, mapWidth)) continue;
+            boolean noLead = true;
+            // check the box; if none of the squares contain lead, remove the deposit from shared array
+            for (int s = 0; s < 2; s++) {
+                for (int t = 0; t < 2; t++) {
+                    MapLocation corner = new MapLocation(x + s, y + t);
+                    if (onTheMap(corner, mapHeight, mapWidth) && rc.senseLead(corner) > 1) noLead = false;
+                }
+            }
+            if (noLead) rc.writeSharedArray(i, 0);
         }
     }
 
@@ -104,7 +126,9 @@ public strictfp class Deposit {
             ) continue;
             int lead = decoded[2];
             int gold = decoded[3];
-            rc.setIndicatorDot(loc, lead, 0, gold);
+            System.out.println(
+                "round: " + rc.getRoundNum() + " location: " + loc.toString() + " lead: " + lead + " gold: " + gold
+            );
             int score = 2000 * gold + 20 * lead - rcLocation.distanceSquaredTo(loc);
             if (score > bestScore) {
                 bestScore = score;
