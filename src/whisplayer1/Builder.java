@@ -49,6 +49,9 @@ public strictfp class Builder {
         // if the archon's dead, you die as well
         if (!rc.canSenseRobotAtLocation(archonLocation)) rc.disintegrate();
 
+        // mutate whenever we can
+        if (rc.canMutate(archonLocation)) rc.mutate(archonLocation);
+
         // prioritize healing archons
         RobotInfo archonInfo = rc.senseRobotAtLocation(archonLocation);
         if (archonInfo.getHealth() < RobotType.ARCHON.getMaxHealth(archonInfo.getLevel())) {

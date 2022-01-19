@@ -31,6 +31,11 @@ public strictfp class Archon {
     static Direction towardsRight = null;
     static Direction towardsLeft = null;
     static Direction[] centerDirections = null;
+    static final int previousHealthDropLength = 20;
+    // note that a positive value in this array means health has DROPPED
+    // while a negative value means health has been gained
+    static int[] previousHealthDrops = new int[previousHealthDropLength];
+    static int previousHealth = RobotType.ARCHON.getMaxHealth(1);
 
     // check if it is this archon's turn to spawn
     static boolean myTurn(RobotController rc, int index) throws GameActionException {
@@ -55,20 +60,34 @@ public strictfp class Archon {
     }
 
     // write the archon's health to the shared array and get the minimum health of all archons
-    static int minArchonHealth(RobotController rc) throws GameActionException {
+    static boolean anyArchonHealthDrops(RobotController rc) throws GameActionException {
         int health = rc.getHealth();
-        int healthIndex = RobotPlayer.archonHealthStartIndex + archonIndex;
+        int healthDropIndex = RobotPlayer.archonHealthDropStartIndex + archonIndex;
         int spawnIndex = RobotPlayer.archonSpawnStartIndex + archonIndex;
-        // if you're close to dying, reset the array; otherwise just write your health
-        rc.writeSharedArray(healthIndex, (health < 50) ? 0 : health);
-        // also reset spawn counter in array if you're close to dying
-        if (health < 50) rc.writeSharedArray(spawnIndex, GameConstants.MAX_SHARED_ARRAY_VALUE);
-        int minHealth = RobotType.ARCHON.getMaxHealth(3);
-        for (int i = RobotPlayer.archonHealthStartIndex; i < RobotPlayer.archonHealthStopIndex; i++) {
-            int val = rc.readSharedArray(i);
-            if (val != 0 && val < minHealth) minHealth = val;
+
+        // shift values back and add in latest drop
+        for (int i = 0; i < previousHealthDropLength - 1; i++) previousHealthDrops[i] = previousHealthDrops[i + 1];
+        previousHealthDrops[previousHealthDropLength - 1] = previousHealth - health;
+        previousHealth = health;
+
+        // if you're close to dying, reset the array
+        if (health < 50) {
+            rc.writeSharedArray(healthDropIndex, 0);
+            // also reset spawn counter in array if you're close to dying
+            rc.writeSharedArray(spawnIndex, GameConstants.MAX_SHARED_ARRAY_VALUE);
+            return true;
+        } else {
+            // write down your health drop
+            int total = 0;
+            for (int i = 0; i < 10; i++) if (previousHealthDrops[i] > 0) total += previousHealthDrops[i];
+            rc.writeSharedArray(healthDropIndex, total);
+            if (total > 0) return true;
+
+            for (int i = RobotPlayer.archonHealthDropStartIndex; i < RobotPlayer.archonHealthDropStopIndex; i++) {
+                if (rc.readSharedArray(i) > 0) return true;
+            }
+            return false;
         }
-        return minHealth;
     }
 
     // write the archon's location to the shared array
@@ -102,10 +121,11 @@ public strictfp class Archon {
         if (ownTeam == null) ownTeam = rc.getTeam();
         if (opponent == null) opponent = ownTeam.opponent();
 
-        // write this archon's health and find out the lowest health on your team
+        // write this archon's health drop from past 10 turns and find out if any archons on your team
+        // have had a health drop
         // I placed this function call up here because it needs to happen on every turn (i.e. before
         // the return statement below)
-        int lowestHealth = minArchonHealth(rc);
+        boolean anyHealthDrops = anyArchonHealthDrops(rc);
         boolean tooManyBots = rc.getRobotCount() > (mapHeight * mapWidth / 3);
         boolean tooLittleLead = rc.getTeamLeadAmount(ownTeam) < RobotType.SOLDIER.buildCostLead;
         // stop early if you already have robots on over a third of the map, if it's not your turn,
@@ -125,7 +145,7 @@ public strictfp class Archon {
 
         // spawn both miners and soldiers in a dynamic ratio
         RobotInfo[] nearbyEnemies = rc.senseNearbyRobots(visionRadiusSquared, opponent);
-        if (lowestHealth < RobotType.ARCHON.getMaxHealth(1) || nearbyEnemies.length > 0) {
+        if (anyHealthDrops || nearbyEnemies.length > 0) {
             // spawn 10% miners, 90% soldiers
             ratio = 1;
         } else if (RobotPlayer.enemyArchonDetected(rc)) {
@@ -140,6 +160,10 @@ public strictfp class Archon {
             // otherwise spawn them such that we move closer to having 50/50
             ratio = (total > 0) ? (10 * numSoldiers / total) : 10;
         }
+
+        // if this building can be mutated, and we have spawned enough bots in a reasonable ratio
+        // then don't spawn to build up lead
+        if (rc.getLevel() == 1 && rc.getRobotCount() > (mapHeight * mapWidth / 20) && ratio >= 4 && ratio <= 6) return;
 
         int randomInt = rng.nextInt(10);
         RobotType spawnType = randomInt < ratio ? RobotType.MINER : RobotType.SOLDIER;

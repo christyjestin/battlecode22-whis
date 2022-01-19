@@ -39,26 +39,24 @@ public strictfp class Soldier {
         return counter;
     }
 
-    static int weakestArchonHealth(RobotController rc) throws GameActionException {
-        int minHealth = RobotType.ARCHON.getMaxHealth(3);
-        for (int i = RobotPlayer.archonHealthStartIndex; i < RobotPlayer.archonHealthStopIndex; i++) {
-            int val = rc.readSharedArray(i);
-            if (val != 0 && val < minHealth) minHealth = val;
+    static boolean anyArchonHealthDrops(RobotController rc) throws GameActionException {
+        for (int i = RobotPlayer.archonHealthDropStartIndex; i < RobotPlayer.archonHealthDropStopIndex; i++) {
+            if (rc.readSharedArray(i) > 0) return true;
         }
-        return minHealth;
+        return false;
     }
 
-    static MapLocation weakestArchonLocation(RobotController rc) throws GameActionException {
-        int minHealth = RobotType.ARCHON.getMaxHealth(3);
+    static MapLocation mostThreatenedArchonLocation(RobotController rc) throws GameActionException {
+        int highestDrop = 0;
         int index = 0;
-        for (int i = RobotPlayer.archonHealthStartIndex; i < RobotPlayer.archonHealthStopIndex; i++) {
+        for (int i = RobotPlayer.archonHealthDropStartIndex; i < RobotPlayer.archonHealthDropStopIndex; i++) {
             int val = rc.readSharedArray(i);
-            if (val != 0 && val < minHealth) {
-                minHealth = val;
-                index = i - RobotPlayer.archonHealthStartIndex;
+            if (val > highestDrop) {
+                highestDrop = val;
+                index = i - RobotPlayer.archonHealthDropStartIndex;
             }
         }
-        // retrieve encoding of weakest archon's location from shared array
+        // retrieve encoding of most threatened archon's location from shared array
         return RobotPlayer.retrieveLocationfromArray(rc, RobotPlayer.archonLocationStartIndex + index);
     }
 
@@ -117,10 +115,10 @@ public strictfp class Soldier {
             // if this robot is still a defender, go towards the archon being attacked
             if (defenseMode != null && defenseMode) targetLocation = defendingLocation;
             // if an archon is being attacked, have half of the archons go defend it
-        } else if (defenseMode == null && weakestArchonHealth(rc) < RobotType.ARCHON.getMaxHealth(1)) {
+        } else if (defenseMode == null && anyArchonHealthDrops(rc)) {
             defenseMode = rng.nextBoolean();
             if (defenseMode) {
-                defendingLocation = weakestArchonLocation(rc);
+                defendingLocation = mostThreatenedArchonLocation(rc);
                 targetLocation = defendingLocation;
             }
         }

@@ -16,10 +16,10 @@ public strictfp class RobotPlayer {
 
     static final int enemyArchonStartIndex = GameConstants.SHARED_ARRAY_LENGTH - GameConstants.MAX_STARTING_ARCHONS;
     static final int enemyArchonStopIndex = GameConstants.SHARED_ARRAY_LENGTH;
-    static final int archonHealthStartIndex = enemyArchonStartIndex - GameConstants.MAX_STARTING_ARCHONS;
-    static final int archonHealthStopIndex = enemyArchonStartIndex;
-    static final int archonLocationStartIndex = archonHealthStartIndex - GameConstants.MAX_STARTING_ARCHONS;
-    static final int archonLocationStopIndex = archonHealthStartIndex;
+    static final int archonHealthDropStartIndex = enemyArchonStartIndex - GameConstants.MAX_STARTING_ARCHONS;
+    static final int archonHealthDropStopIndex = enemyArchonStartIndex;
+    static final int archonLocationStartIndex = archonHealthDropStartIndex - GameConstants.MAX_STARTING_ARCHONS;
+    static final int archonLocationStopIndex = archonHealthDropStartIndex;
     static final int archonSpawnStartIndex = archonLocationStartIndex - GameConstants.MAX_STARTING_ARCHONS;
     static final int archonSpawnStopIndex = archonLocationStartIndex;
     static final int archonCounterIndex = archonSpawnStartIndex - 1;
@@ -44,6 +44,16 @@ public strictfp class RobotPlayer {
             try {
                 switch (rc.getType()) {
                     case ARCHON:
+                        rc.setIndicatorString(
+                            rc.readSharedArray(56) +
+                            " " +
+                            rc.readSharedArray(57) +
+                            " " +
+                            rc.readSharedArray(58) +
+                            " " +
+                            rc.readSharedArray(59) +
+                            " "
+                        );
                         Archon.runArchon(rc);
                         break;
                     case MINER:
