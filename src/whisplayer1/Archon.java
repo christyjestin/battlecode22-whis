@@ -141,7 +141,7 @@ public strictfp class Archon {
         if (tooManyBots || !myTurn(rc, archonIndex) || !rc.isActionReady() || tooLittleLead) return;
 
         // spawn 2 builders next to each archon
-        if (nearbyBuildersCount(rc) < 2 && rc.getRobotCount() > 10) {
+        if (nearbyBuildersCount(rc) < 2 && rc.getRobotCount() > (int) (rc.getArchonCount() * 2.5)) {
             Direction spawnDirection = RobotPlayer.findBestSpawnDirection(rc);
             if (rc.canBuildRobot(RobotType.BUILDER, spawnDirection)) {
                 rc.buildRobot(RobotType.BUILDER, spawnDirection);

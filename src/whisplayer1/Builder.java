@@ -64,7 +64,6 @@ public strictfp class Builder {
                 if (bot.getHealth() < bot.getType().getMaxHealth(bot.getLevel())) {
                     MapLocation botLocation = bot.getLocation();
                     if (rc.canRepair(botLocation)) rc.repair(botLocation);
-                    if (!rc.isActionReady()) break;
                 }
             }
         }
