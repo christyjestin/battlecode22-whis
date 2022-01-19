@@ -80,6 +80,7 @@ public strictfp class Soldier {
         if (exploreDest == null) exploreDest = reserveMode ? center : randomLocation(rc);
 
         RobotPlayer.updateEnemyArchons(rc, visionRadiusSquared, opponent);
+        Deposit.addDeposits(rc, visionRadiusSquared, mapHeight, mapWidth);
 
         if (!rc.isActionReady() && !rc.isMovementReady()) return;
 

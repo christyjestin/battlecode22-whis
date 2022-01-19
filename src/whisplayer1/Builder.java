@@ -23,6 +23,8 @@ public strictfp class Builder {
     static int archonId = -1;
     static MapLocation laboratoryLocation = null;
     static int laboratoryId = -1;
+    static int mapHeight = -1;
+    static int mapWidth = -1;
 
     static MapLocation findArchonLocation(RobotController rc) throws GameActionException {
         for (Direction direction : directions) {
@@ -37,7 +39,10 @@ public strictfp class Builder {
     static void runBuilder(RobotController rc) throws GameActionException {
         if (ownTeam == null) ownTeam = rc.getTeam();
         if (opponent == null) opponent = ownTeam.opponent();
+        if (mapHeight == -1) mapHeight = rc.getMapHeight();
+        if (mapWidth == -1) mapWidth = rc.getMapWidth();
         RobotPlayer.updateEnemyArchons(rc, visionRadiusSquared, opponent);
+        Deposit.addDeposits(rc, visionRadiusSquared, mapHeight, mapWidth);
 
         if (!rc.isActionReady()) return;
 

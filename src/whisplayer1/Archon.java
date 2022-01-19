@@ -129,6 +129,7 @@ public strictfp class Archon {
         if (ownTeam == null) ownTeam = rc.getTeam();
         if (opponent == null) opponent = ownTeam.opponent();
 
+        Deposit.addDeposits(rc, visionRadiusSquared, mapHeight, mapWidth);
         // write this archon's health drop from past 10 turns and find out if any archons on your team
         // have had a health drop
         // I placed this function call up here because it needs to happen on every turn (i.e. before

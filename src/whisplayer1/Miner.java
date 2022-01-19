@@ -16,6 +16,7 @@ public strictfp class Miner {
     static boolean reportedDeath = false;
     static Direction[] lastThreeMoves = { null, null, null };
     static Direction nextMove = null;
+    static Boolean exploreMode = null;
 
     static MapLocation randomLocation(RobotController rc) throws GameActionException {
         if (mapHeight == -1) mapHeight = rc.getMapHeight();
@@ -51,41 +52,30 @@ public strictfp class Miner {
         }
 
         RobotPlayer.updateEnemyArchons(rc, visionRadiusSquared, opponent);
+        Deposit.addDeposits(rc, visionRadiusSquared, mapHeight, mapWidth);
 
         // return immediately if you can't move
         if (!rc.isMovementReady()) return;
 
-        MapLocation[] nearbyLocations = rc.getAllLocationsWithinRadiusSquared(rcLocation, visionRadiusSquared);
-
-        MapLocation targetLocation = null;
-        int targetScore = -7200;
-
-        for (MapLocation location : nearbyLocations) {
-            // ignore the location if another robot is already there
-            if (rc.canSenseRobotAtLocation(location)) continue;
-
-            int gold = rc.senseGold(location);
-            int lead = rc.senseLead(location);
-            if (gold > 0 || lead > 1) {
-                int score = 100 * gold + 10 * lead - rcLocation.distanceSquaredTo(location);
-                if (score > targetScore) {
-                    targetLocation = location;
-                    targetScore = score;
-                }
-            }
+        MapLocation deposit = Deposit.nearestDeposit(rc, rcLocation);
+        // if you haven't been assigned, and you know about a deposit, then become an explorer w/ 50/50 chance
+        if (deposit != null && exploreMode == null) {
+            exploreMode = rng.nextBoolean();
+            if (!exploreMode) destination = deposit;
         }
+        // if you're close to your target, get a new target based on your explore mode
+        int distance = rcLocation.distanceSquaredTo(destination);
+        if ((exploreMode == null || exploreMode) && distance < visionRadiusSquared / 2) {
+            if (deposit != null) exploreMode = rng.nextBoolean();
+            destination = (exploreMode == null || exploreMode) ? randomLocation(rc) : deposit;
+        } else if (exploreMode != null && !exploreMode) {
+            destination = deposit;
+        }
+        rc.setIndicatorString(destination.toString());
 
         // move using pathfinder algorithm
-        if (targetLocation == null) {
-            // randomly generate a new destination if you're already there
-            if (rc.getLocation().distanceSquaredTo(destination) < visionRadiusSquared / 2) {
-                destination = randomLocation(rc);
-            }
-            targetLocation = destination;
-        }
-
         if (nextMove == null) {
-            Direction[] pathfinderReturn = RobotPlayer.pathfinder(targetLocation, rc, lastThreeMoves);
+            Direction[] pathfinderReturn = RobotPlayer.pathfinder(destination, rc, lastThreeMoves);
             lastThreeMoves = new Direction[] { pathfinderReturn[0], pathfinderReturn[1], pathfinderReturn[2] };
             nextMove = pathfinderReturn[3];
         } else {

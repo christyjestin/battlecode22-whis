@@ -12,7 +12,7 @@ public strictfp class RobotPlayer {
     static final int minerCountIndex = 0;
     static final int soldierCountIndex = 1;
     static final int builderCountIndex = 2;
-    static final int leadGridStartIndex = 3;
+    static final int depositStartIndex = 3;
 
     static final int enemyArchonStartIndex = GameConstants.SHARED_ARRAY_LENGTH - GameConstants.MAX_STARTING_ARCHONS;
     static final int enemyArchonStopIndex = GameConstants.SHARED_ARRAY_LENGTH;
@@ -23,6 +23,7 @@ public strictfp class RobotPlayer {
     static final int archonSpawnStartIndex = archonLocationStartIndex - GameConstants.MAX_STARTING_ARCHONS;
     static final int archonSpawnStopIndex = archonLocationStartIndex;
     static final int archonCounterIndex = archonSpawnStartIndex - 1;
+    static final int depositStopIndex = archonCounterIndex;
 
     static final Direction[] directions = {
         Direction.NORTH,
