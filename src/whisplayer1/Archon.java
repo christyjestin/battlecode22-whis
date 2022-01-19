@@ -123,8 +123,8 @@ public strictfp class Archon {
         if (towardsCenter == null) towardsCenter = rcLocation.directionTo(center);
         // randomly choose if a direction if the archon is already at the center of the map
         if (towardsCenter.equals(Direction.CENTER)) towardsCenter = directions[rng.nextInt(directions.length)];
-        if (towardsRight == null) towardsCenter.rotateRight();
-        if (towardsLeft == null) towardsCenter.rotateLeft();
+        if (towardsRight == null) towardsRight = towardsCenter.rotateRight();
+        if (towardsLeft == null) towardsLeft = towardsCenter.rotateLeft();
         if (centerDirections == null) centerDirections = new Direction[] { towardsRight, towardsCenter, towardsLeft };
         if (ownTeam == null) ownTeam = rc.getTeam();
         if (opponent == null) opponent = ownTeam.opponent();
