@@ -20,10 +20,16 @@ public strictfp class Miner {
     static Direction nextMove = null;
     static NoLead noLead = null;
 
-    static boolean hasMiner(RobotController rc, MapLocation location) throws GameActionException {
+    static boolean badLocation(RobotController rc, MapLocation location) throws GameActionException {
         if (!rc.canSenseRobotAtLocation(location)) return false;
         RobotInfo robot = rc.senseRobotAtLocation(location);
-        return robot.getType().equals(RobotType.MINER) && robot.getTeam().equals(ownTeam) && robot.getID() != id;
+        // just in case
+        if (robot == null) return false;
+        // ignore locations that have either friendly miners or enemy soldiers
+        return (
+            (robot.getType().equals(RobotType.MINER) && robot.getTeam().equals(ownTeam) && robot.getID() != id) ||
+            (robot.getType().equals(RobotType.SOLDIER) && robot.getTeam().equals(opponent))
+        );
     }
 
     static void runMiner(RobotController rc) throws GameActionException {
@@ -69,7 +75,7 @@ public strictfp class Miner {
 
         for (MapLocation location : nearbyLocations) {
             // ignore the location if another robot is already there
-            if (hasMiner(rc, location)) continue;
+            if (badLocation(rc, location)) continue;
 
             int gold = rc.senseGold(location);
             int lead = rc.senseLead(location);
