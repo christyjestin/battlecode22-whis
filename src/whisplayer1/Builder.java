@@ -47,12 +47,6 @@ public strictfp class Builder {
         if (rcLocation == null) rcLocation = rc.getLocation();
         if (noLead == null) noLead = new NoLead(rc, visionRadiusSquared, mapHeight, mapWidth);
 
-        RobotPlayer.updateEnemyArchons(rc, visionRadiusSquared, opponent);
-        RobotPlayer.updateGoldDeposits(rc, visionRadiusSquared);
-        noLead.updateGrid(rcLocation);
-
-        if (!rc.isActionReady()) return;
-
         if (archonLocation == null) {
             archonLocation = findArchonLocation(rc);
             if (archonLocation == null) rc.disintegrate();
@@ -60,6 +54,12 @@ public strictfp class Builder {
 
         // if the archon's dead, you die as well
         if (!rc.canSenseRobotAtLocation(archonLocation)) rc.disintegrate();
+
+        RobotPlayer.updateEnemyArchons(rc, visionRadiusSquared, opponent);
+        RobotPlayer.updateGoldDeposits(rc, visionRadiusSquared);
+        noLead.updateGrid(rcLocation);
+
+        if (!rc.isActionReady()) return;
 
         // mutate whenever we can
         if (rc.canMutate(archonLocation)) rc.mutate(archonLocation);
