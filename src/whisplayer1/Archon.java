@@ -22,6 +22,7 @@ public strictfp class Archon {
     static MapLocation center = null;
     static MapLocation rcLocation = null;
     static final int visionRadiusSquared = RobotType.ARCHON.visionRadiusSquared;
+    static final int actionRadiusSquared = RobotType.ARCHON.actionRadiusSquared;
     static Team ownTeam = null;
     static Team opponent = null;
     static int archonIndex = -1;
@@ -197,6 +198,17 @@ public strictfp class Archon {
             }
             leftPointer = leftPointer.rotateLeft();
             rightPointer = rightPointer.rotateRight();
+        }
+
+        if (!rc.isActionReady()) return;
+
+        RobotInfo[] nearbyBots = rc.senseNearbyRobots(actionRadiusSquared, ownTeam);
+        for (RobotInfo bot : nearbyBots) {
+            if (bot.getHealth() < bot.getType().getMaxHealth(bot.getLevel())) {
+                MapLocation botLocation = bot.getLocation();
+                if (rc.canRepair(botLocation)) rc.repair(botLocation);
+                if (!rc.isActionReady()) return;
+            }
         }
     }
 }
