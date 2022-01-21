@@ -12,7 +12,7 @@ public strictfp class RobotPlayer {
     static final int minerCountIndex = 0;
     static final int soldierCountIndex = 1;
     static final int builderCountIndex = 2;
-    static final int leadGridStartIndex = 3;
+    static final int noLeadGridStartIndex = 3;
 
     static final int enemyArchonStartIndex = GameConstants.SHARED_ARRAY_LENGTH - GameConstants.MAX_STARTING_ARCHONS;
     static final int enemyArchonStopIndex = GameConstants.SHARED_ARRAY_LENGTH;

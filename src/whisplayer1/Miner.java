@@ -18,12 +18,7 @@ public strictfp class Miner {
     static boolean reportedDeath = false;
     static Direction[] lastThreeMoves = { null, null, null };
     static Direction nextMove = null;
-
-    static MapLocation randomLocation(RobotController rc) throws GameActionException {
-        if (mapHeight == -1) mapHeight = rc.getMapHeight();
-        if (mapWidth == -1) mapWidth = rc.getMapWidth();
-        return new MapLocation(rng.nextInt(mapWidth), rng.nextInt(mapHeight));
-    }
+    static NoLead noLead = null;
 
     static boolean hasMiner(RobotController rc, MapLocation location) throws GameActionException {
         if (!rc.canSenseRobotAtLocation(location)) return false;
@@ -44,7 +39,8 @@ public strictfp class Miner {
         if (id == -1) id = rc.getID();
         if (ownTeam == null) ownTeam = rc.getTeam();
         if (opponent == null) opponent = ownTeam.opponent();
-        if (destination == null) destination = randomLocation(rc);
+        if (noLead == null) noLead = new NoLead(rc, visionRadiusSquared, mapHeight, mapWidth);
+        if (destination == null) destination = noLead.minerRandomLocation();
 
         // Try to mine on squares around us.
         MapLocation rcLocation = rc.getLocation();
@@ -61,6 +57,7 @@ public strictfp class Miner {
         }
 
         RobotPlayer.updateEnemyArchons(rc, visionRadiusSquared, opponent);
+        noLead.updateGrid(rcLocation);
 
         // return immediately if you can't move
         if (!rc.isMovementReady()) return;
@@ -89,7 +86,7 @@ public strictfp class Miner {
         if (targetLocation == null) {
             // randomly generate a new destination if you're already there
             if (rcLocation.distanceSquaredTo(destination) < visionRadiusSquared / 2) {
-                destination = randomLocation(rc);
+                destination = noLead.minerRandomLocation();
             }
             targetLocation = destination;
         }

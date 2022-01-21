@@ -37,6 +37,7 @@ public strictfp class Archon {
     // while a negative value means health has been gained
     static int[] previousHealthDrops = new int[previousHealthDropLength];
     static int previousHealth = RobotType.ARCHON.getMaxHealth(1);
+    static NoLead noLead = null;
 
     // check if it is this archon's turn to spawn
     static boolean myTurn(RobotController rc, int index) throws GameActionException {
@@ -129,6 +130,9 @@ public strictfp class Archon {
         if (centerDirections == null) centerDirections = new Direction[] { towardsRight, towardsCenter, towardsLeft };
         if (ownTeam == null) ownTeam = rc.getTeam();
         if (opponent == null) opponent = ownTeam.opponent();
+        if (noLead == null) noLead = new NoLead(rc, visionRadiusSquared, mapHeight, mapWidth);
+
+        noLead.updateGrid(rcLocation);
 
         // write this archon's health drop from past 10 turns and find out if any archons on your team
         // have had a health drop
