@@ -77,10 +77,14 @@ public strictfp class Miner {
             // ignore the location if another robot is already there
             if (badLocation(rc, location)) continue;
 
-            int gold = rc.senseGold(location);
+            if (rc.senseGold(location) > 0) {
+                targetLocation = location;
+                break;
+            }
+
             int lead = rc.senseLead(location);
-            if (gold > 0 || lead > 1) {
-                int score = 100 * gold + 10 * lead - rcLocation.distanceSquaredTo(location);
+            if (lead > 1) {
+                int score = 10 * lead - rcLocation.distanceSquaredTo(location);
                 if (score > targetScore) {
                     targetLocation = location;
                     targetScore = score;
