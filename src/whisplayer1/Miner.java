@@ -63,6 +63,7 @@ public strictfp class Miner {
         }
 
         RobotPlayer.updateEnemyArchons(rc, visionRadiusSquared, opponent);
+        RobotPlayer.updateGoldDeposits(rc, visionRadiusSquared);
         noLead.updateGrid(rcLocation);
 
         // return immediately if you can't move
@@ -73,21 +74,26 @@ public strictfp class Miner {
         MapLocation targetLocation = null;
         int targetScore = -7200;
 
-        for (MapLocation location : nearbyLocations) {
-            // ignore the location if another robot is already there
-            if (badLocation(rc, location)) continue;
+        MapLocation deposit = RobotPlayer.nearestGoldDeposit(rc, rcLocation);
+        if (deposit != null) {
+            targetLocation = deposit;
+        } else {
+            for (MapLocation location : nearbyLocations) {
+                // ignore the location if another robot is already there
+                if (badLocation(rc, location)) continue;
 
-            if (rc.senseGold(location) > 0) {
-                targetLocation = location;
-                break;
-            }
-
-            int lead = rc.senseLead(location);
-            if (lead > 1) {
-                int score = 10 * lead - rcLocation.distanceSquaredTo(location);
-                if (score > targetScore) {
+                if (rc.senseGold(location) > 0) {
                     targetLocation = location;
-                    targetScore = score;
+                    break;
+                }
+
+                int lead = rc.senseLead(location);
+                if (lead > 1) {
+                    int score = 10 * lead - rcLocation.distanceSquaredTo(location);
+                    if (score > targetScore) {
+                        targetLocation = location;
+                        targetScore = score;
+                    }
                 }
             }
         }

@@ -48,6 +48,7 @@ public strictfp class Builder {
         if (noLead == null) noLead = new NoLead(rc, visionRadiusSquared, mapHeight, mapWidth);
 
         RobotPlayer.updateEnemyArchons(rc, visionRadiusSquared, opponent);
+        RobotPlayer.updateGoldDeposits(rc, visionRadiusSquared);
         noLead.updateGrid(rcLocation);
 
         if (!rc.isActionReady()) return;

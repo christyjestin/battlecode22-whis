@@ -132,6 +132,7 @@ public strictfp class Archon {
         if (opponent == null) opponent = ownTeam.opponent();
         if (noLead == null) noLead = new NoLead(rc, visionRadiusSquared, mapHeight, mapWidth);
 
+        RobotPlayer.updateGoldDeposits(rc, visionRadiusSquared);
         noLead.updateGrid(rcLocation);
 
         // write this archon's health drop from past 10 turns and find out if any archons on your team

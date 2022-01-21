@@ -13,6 +13,9 @@ public strictfp class RobotPlayer {
     static final int soldierCountIndex = 1;
     static final int builderCountIndex = 2;
     static final int noLeadGridStartIndex = 3;
+    static final int noLeadGridStopIndex = 12;
+    static final int goldDepositStartIndex = noLeadGridStopIndex;
+    static final int goldDepositStopIndex = goldDepositStartIndex + 8;
 
     static final int enemyArchonStartIndex = GameConstants.SHARED_ARRAY_LENGTH - GameConstants.MAX_STARTING_ARCHONS;
     static final int enemyArchonStopIndex = GameConstants.SHARED_ARRAY_LENGTH;
@@ -44,6 +47,7 @@ public strictfp class RobotPlayer {
             try {
                 switch (rc.getType()) {
                     case ARCHON:
+                        rc.setIndicatorString(rc.readSharedArray(12) + " " + rc.readSharedArray(13));
                         Archon.runArchon(rc);
                         break;
                     case MINER:
@@ -168,9 +172,10 @@ public strictfp class RobotPlayer {
     public static void addEnemyArchon(RobotController rc, MapLocation loc) throws GameActionException {
         int encoding = loc.x * 100 + loc.y;
         for (int i = enemyArchonStartIndex; i < enemyArchonStopIndex; i++) {
-            if (rc.readSharedArray(i) == encoding) {
-                return;
-            } else if (rc.readSharedArray(i) == 0) {
+            if (rc.readSharedArray(i) == encoding) return;
+        }
+        for (int i = enemyArchonStartIndex; i < enemyArchonStopIndex; i++) {
+            if (rc.readSharedArray(i) == 0) {
                 rc.writeSharedArray(i, encoding);
                 return;
             }
@@ -201,6 +206,48 @@ public strictfp class RobotPlayer {
             if (enemy.getType().equals(RobotType.ARCHON)) addEnemyArchon(rc, enemy.getLocation());
         }
         checkEnemyArchons(rc);
+    }
+
+    public static void addGoldDeposits(RobotController rc, MapLocation[] goldLocations) throws GameActionException {
+        for (MapLocation goldLocation : goldLocations) {
+            int encoding = goldLocation.x * 100 + goldLocation.y;
+            for (int i = goldDepositStartIndex; i < goldDepositStopIndex; i++) {
+                if (rc.readSharedArray(i) == encoding) return;
+            }
+            for (int i = goldDepositStartIndex; i < goldDepositStopIndex; i++) {
+                if (rc.readSharedArray(i) == 0) {
+                    rc.writeSharedArray(i, encoding);
+                    return;
+                }
+            }
+        }
+    }
+
+    public static void updateGoldDeposits(RobotController rc, int visionRadiusSquared) throws GameActionException {
+        for (int i = goldDepositStartIndex; i < goldDepositStopIndex; i++) {
+            int encoding = rc.readSharedArray(i);
+            if (encoding == 0) continue;
+            MapLocation goldLocation = new MapLocation(encoding / 100, encoding % 100);
+            if (rc.canSenseLocation(goldLocation) && rc.senseGold(goldLocation) == 0) rc.writeSharedArray(i, 0);
+        }
+        addGoldDeposits(rc, rc.senseNearbyLocationsWithGold(visionRadiusSquared));
+    }
+
+    public static MapLocation nearestGoldDeposit(RobotController rc, MapLocation rcLocation)
+        throws GameActionException {
+        MapLocation deposit = null;
+        int closestDistance = 7200;
+        for (int i = goldDepositStartIndex; i < goldDepositStopIndex; i++) {
+            int encoding = rc.readSharedArray(i);
+            if (encoding == 0) continue;
+            MapLocation goldLocation = new MapLocation(encoding / 100, encoding % 100);
+            int distance = rcLocation.distanceSquaredTo(goldLocation);
+            if (distance < closestDistance) {
+                deposit = goldLocation;
+                distance = closestDistance;
+            }
+        }
+        return deposit;
     }
 
     static Direction findBestSpawnDirection(RobotController rc) throws GameActionException {

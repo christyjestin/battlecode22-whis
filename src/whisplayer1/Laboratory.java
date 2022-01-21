@@ -31,6 +31,7 @@ public strictfp class Laboratory {
         if (rcLocation == null) rcLocation = rc.getLocation();
 
         RobotPlayer.updateEnemyArchons(rc, visionRadiusSquared, opponent);
+        RobotPlayer.updateGoldDeposits(rc, visionRadiusSquared);
         noLead.updateGrid(rcLocation);
 
         int goldGap = rc.getTeamGoldAmount(ownTeam) - rc.getTeamGoldAmount(opponent);

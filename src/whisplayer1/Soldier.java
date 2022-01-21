@@ -82,6 +82,7 @@ public strictfp class Soldier {
         if (noLead == null) noLead = new NoLead(rc, visionRadiusSquared, mapHeight, mapWidth);
 
         RobotPlayer.updateEnemyArchons(rc, visionRadiusSquared, opponent);
+        RobotPlayer.updateGoldDeposits(rc, visionRadiusSquared);
         MapLocation rcLocation = rc.getLocation();
         noLead.updateGrid(rcLocation);
 
