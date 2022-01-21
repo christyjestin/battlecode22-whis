@@ -12,6 +12,7 @@ public strictfp class Miner {
     static final int actionRadiusSquared = RobotType.MINER.actionRadiusSquared;
     static int mapHeight = -1;
     static int mapWidth = -1;
+    static int id = -1;
     static Team ownTeam = null;
     static Team opponent = null;
     static boolean reportedDeath = false;
@@ -24,6 +25,12 @@ public strictfp class Miner {
         return new MapLocation(rng.nextInt(mapWidth), rng.nextInt(mapHeight));
     }
 
+    static boolean hasMiner(RobotController rc, MapLocation location) throws GameActionException {
+        if (!rc.canSenseRobotAtLocation(location)) return false;
+        RobotInfo robot = rc.senseRobotAtLocation(location);
+        return robot.getType().equals(RobotType.MINER) && robot.getTeam().equals(ownTeam) && robot.getID() != id;
+    }
+
     static void runMiner(RobotController rc) throws GameActionException {
         // report likely miner death
         if (rc.getHealth() < 6 && !reportedDeath) {
@@ -34,6 +41,7 @@ public strictfp class Miner {
         // init code
         if (mapHeight == -1) mapHeight = rc.getMapHeight();
         if (mapWidth == -1) mapWidth = rc.getMapWidth();
+        if (id == -1) id = rc.getID();
         if (ownTeam == null) ownTeam = rc.getTeam();
         if (opponent == null) opponent = ownTeam.opponent();
         if (destination == null) destination = randomLocation(rc);
@@ -64,7 +72,7 @@ public strictfp class Miner {
 
         for (MapLocation location : nearbyLocations) {
             // ignore the location if another robot is already there
-            if (rc.canSenseRobotAtLocation(location)) continue;
+            if (hasMiner(rc, location)) continue;
 
             int gold = rc.senseGold(location);
             int lead = rc.senseLead(location);
