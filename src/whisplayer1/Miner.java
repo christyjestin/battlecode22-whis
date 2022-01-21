@@ -12,6 +12,7 @@ public strictfp class Miner {
     static final int actionRadiusSquared = RobotType.MINER.actionRadiusSquared;
     static int mapHeight = -1;
     static int mapWidth = -1;
+    static Team ownTeam = null;
     static Team opponent = null;
     static boolean reportedDeath = false;
     static Direction[] lastThreeMoves = { null, null, null };
@@ -33,7 +34,8 @@ public strictfp class Miner {
         // init code
         if (mapHeight == -1) mapHeight = rc.getMapHeight();
         if (mapWidth == -1) mapWidth = rc.getMapWidth();
-        if (opponent == null) opponent = rc.getTeam().opponent();
+        if (ownTeam == null) ownTeam = rc.getTeam();
+        if (opponent == null) opponent = ownTeam.opponent();
         if (destination == null) destination = randomLocation(rc);
 
         // Try to mine on squares around us.
