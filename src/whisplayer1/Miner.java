@@ -52,7 +52,7 @@ public strictfp class Miner {
         MapLocation rcLocation = rc.getLocation();
         for (int dx = -1; dx <= 1; dx++) {
             for (int dy = -1; dy <= 1; dy++) {
-                MapLocation mineLocation = new MapLocation(rcLocation.x + dx, rcLocation.y + dy);
+                MapLocation mineLocation = rcLocation.translate(dx, dy);
                 while (rc.canMineGold(mineLocation)) {
                     rc.mineGold(mineLocation);
                 }
