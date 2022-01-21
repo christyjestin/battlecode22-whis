@@ -21,6 +21,7 @@ public strictfp class Soldier {
     static MapLocation center = null;
     static Direction[] lastThreeMoves = { null, null, null };
     static Direction nextMove = null;
+    static NoLead noLead = null;
 
     static MapLocation randomLocation(RobotController rc) throws GameActionException {
         return new MapLocation(rng.nextInt(mapWidth), rng.nextInt(mapHeight));
@@ -78,8 +79,11 @@ public strictfp class Soldier {
         if (ownTeam == null) ownTeam = rc.getTeam();
         if (opponent == null) opponent = ownTeam.opponent();
         if (exploreDest == null) exploreDest = reserveMode ? center : randomLocation(rc);
+        if (noLead == null) noLead = new NoLead(rc, visionRadiusSquared, mapHeight, mapWidth);
 
         RobotPlayer.updateEnemyArchons(rc, visionRadiusSquared, opponent);
+        MapLocation rcLocation = rc.getLocation();
+        noLead.updateGrid(rcLocation);
 
         if (!rc.isActionReady() && !rc.isMovementReady()) return;
 

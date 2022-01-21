@@ -17,12 +17,16 @@ public strictfp class Builder {
 
     static final int visionRadiusSquared = RobotType.BUILDER.visionRadiusSquared;
     static final int actionRadiusSquared = RobotType.BUILDER.actionRadiusSquared;
+    static int mapHeight = -1;
+    static int mapWidth = -1;
     static Team ownTeam = null;
     static Team opponent = null;
     static MapLocation archonLocation = null;
     static int archonId = -1;
     static MapLocation laboratoryLocation = null;
     static int laboratoryId = -1;
+    static MapLocation rcLocation = null;
+    static NoLead noLead = null;
 
     static MapLocation findArchonLocation(RobotController rc) throws GameActionException {
         for (Direction direction : directions) {
@@ -35,9 +39,16 @@ public strictfp class Builder {
     }
 
     static void runBuilder(RobotController rc) throws GameActionException {
+        // init code
         if (ownTeam == null) ownTeam = rc.getTeam();
         if (opponent == null) opponent = ownTeam.opponent();
+        if (mapHeight == -1) mapHeight = rc.getMapHeight();
+        if (mapWidth == -1) mapWidth = rc.getMapWidth();
+        if (rcLocation == null) rcLocation = rc.getLocation();
+        if (noLead == null) noLead = new NoLead(rc, visionRadiusSquared, mapHeight, mapWidth);
+
         RobotPlayer.updateEnemyArchons(rc, visionRadiusSquared, opponent);
+        noLead.updateGrid(rcLocation);
 
         if (!rc.isActionReady()) return;
 
