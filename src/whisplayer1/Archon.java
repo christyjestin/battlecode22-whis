@@ -6,7 +6,7 @@ import java.util.Random;
 public strictfp class Archon {
 
     static final Random rng = new Random();
-    static int ratio = 5;
+    static int ratio = -1;
 
     static final Direction[] directions = {
         Direction.NORTH,
@@ -160,14 +160,17 @@ public strictfp class Archon {
             // spawn 30% miners, 70% soldiers
             ratio = 3;
         } else {
-            // normal state: 50% miners, 50% soldiers
-            int numMiners = rc.readSharedArray(RobotPlayer.minerCountIndex);
-            int numSoldiers = rc.readSharedArray(RobotPlayer.soldierCountIndex);
-            int total = numMiners + numSoldiers;
-            // if we don't have any robots, spawn only miners
-            // otherwise spawn them such that we move closer to having 50/50
-            ratio = (total > 0) ? (10 * numSoldiers / total) : 10;
+            // default to ratio that equalizes miners and soldiers
+            ratio = -1;
         }
+        // normal state: 50% miners, 50% soldiers
+        int numMiners = rc.readSharedArray(RobotPlayer.minerCountIndex);
+        int numSoldiers = rc.readSharedArray(RobotPlayer.soldierCountIndex);
+        int total = numMiners + numSoldiers;
+        // if we don't have any robots, spawn only miners
+        // otherwise spawn them such that we move closer to having 50/50
+        int equalizerRatio = (total > 0) ? (10 * numSoldiers / total) : 10;
+        ratio = (ratio == -1) ? equalizerRatio : (equalizerRatio + ratio) / 2;
 
         // if we have spawned enough bots in a reasonable ratio, then don't spawn to build up lead
         // only do this if we can either mutate to level 2 or build a laboratory

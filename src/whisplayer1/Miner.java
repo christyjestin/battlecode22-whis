@@ -83,6 +83,7 @@ public strictfp class Miner {
             }
             targetLocation = destination;
         }
+        rc.setIndicatorString(targetLocation.toString());
 
         if (nextMove == null) {
             Direction[] pathfinderReturn = RobotPlayer.pathfinder(targetLocation, rc, lastThreeMoves);
