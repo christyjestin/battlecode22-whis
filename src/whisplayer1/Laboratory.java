@@ -6,12 +6,8 @@ public strictfp class Laboratory {
 
     static final int visionRadiusSquared = RobotType.LABORATORY.visionRadiusSquared;
     static final int actionRadiusSquared = RobotType.LABORATORY.actionRadiusSquared;
-    static int mapHeight = -1;
-    static int mapWidth = -1;
     static Team ownTeam = null;
     static Team opponent = null;
-    static NoLead noLead = null;
-    static MapLocation rcLocation = null;
 
     static int nearbyArchonLevel(RobotController rc) throws GameActionException {
         RobotInfo[] nearbyBots = rc.senseNearbyRobots(visionRadiusSquared, ownTeam);
@@ -23,16 +19,8 @@ public strictfp class Laboratory {
 
     static void runLaboratory(RobotController rc) throws GameActionException {
         // init code
-        if (mapHeight == -1) mapHeight = rc.getMapHeight();
-        if (mapWidth == -1) mapWidth = rc.getMapWidth();
         if (ownTeam == null) ownTeam = rc.getTeam();
         if (opponent == null) opponent = ownTeam.opponent();
-        if (noLead == null) noLead = new NoLead(rc, visionRadiusSquared, mapHeight, mapWidth);
-        if (rcLocation == null) rcLocation = rc.getLocation();
-
-        RobotPlayer.updateEnemyArchons(rc, visionRadiusSquared, opponent);
-        RobotPlayer.updateGoldDeposits(rc, visionRadiusSquared);
-        noLead.updateGrid(rcLocation);
 
         int goldGap = rc.getTeamGoldAmount(ownTeam) - rc.getTeamGoldAmount(opponent);
         int archonLevel = nearbyArchonLevel(rc);

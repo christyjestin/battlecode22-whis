@@ -95,7 +95,8 @@ public strictfp class Soldier {
         RobotPlayer.updateEnemyArchons(rc, visionRadiusSquared, opponent);
         RobotPlayer.updateGoldDeposits(rc, visionRadiusSquared);
         MapLocation rcLocation = rc.getLocation();
-        noLead.updateGrid(rcLocation);
+        // only update when it's safe since this is bytecode intensive
+        if (rc.senseNearbyRobots(visionRadiusSquared, opponent).length == 0) noLead.updateGrid(rcLocation);
 
         if (!rc.isActionReady() && !rc.isMovementReady()) return;
 
