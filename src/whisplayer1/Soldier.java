@@ -22,6 +22,8 @@ public strictfp class Soldier {
     static Direction[] lastThreeMoves = { null, null, null };
     static Direction nextMove = null;
     static NoLead noLead = null;
+    static MapLocation savedArchonLocation = null;
+    static MapLocation meetupPoint = null;
 
     static MapLocation randomLocation(RobotController rc) throws GameActionException {
         return new MapLocation(rng.nextInt(mapWidth), rng.nextInt(mapHeight));
@@ -63,6 +65,15 @@ public strictfp class Soldier {
 
     static boolean closeEnoughTo(RobotController rc, MapLocation loc, int distanceSquared) throws GameActionException {
         return rc.getLocation().isWithinDistanceSquared(loc, distanceSquared);
+    }
+
+    static MapLocation meetupPoint(MapLocation archonLocation) throws GameActionException {
+        Direction centerDirection = archonLocation.directionTo(center);
+        MapLocation meetupPoint = archonLocation;
+        for (int i = 0; i < 10; i++) {
+            meetupPoint = meetupPoint.add(centerDirection);
+        }
+        return meetupPoint;
     }
 
     public static void runSoldier(RobotController rc) throws GameActionException {
@@ -131,7 +142,13 @@ public strictfp class Soldier {
         if (defenseMode == null || defenseMode == false) {
             for (int i = RobotPlayer.enemyArchonStartIndex; i < RobotPlayer.enemyArchonStopIndex; i++) {
                 if (rc.readSharedArray(i) != 0) {
-                    targetLocation = RobotPlayer.retrieveLocationfromArray(rc, i);
+                    MapLocation archonLocation = RobotPlayer.retrieveLocationfromArray(rc, i);
+                    if (savedArchonLocation == null || !archonLocation.equals(savedArchonLocation)) {
+                        savedArchonLocation = archonLocation;
+                        meetupPoint = meetupPoint(archonLocation);
+                    }
+                    // regroup/wait to attack if you don't have many teammates nearby
+                    targetLocation = nearbySoldiersCount(rc) > 4 ? archonLocation : meetupPoint;
                     break;
                 }
             }
