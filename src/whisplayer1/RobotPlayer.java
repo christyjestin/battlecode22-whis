@@ -258,7 +258,7 @@ public strictfp class RobotPlayer {
         }
     }
 
-    public static void checkGuesses(RobotController rc) throws GameActionException {
+    public static void checkGuesses(RobotController rc, Team opponent) throws GameActionException {
         for (int i = archonGuessStartIndex; i < archonGuessStopIndex; i++) {
             int encoding = rc.readSharedArray(i);
             if (encoding == 0) continue;
@@ -267,7 +267,8 @@ public strictfp class RobotPlayer {
             if (rc.canSenseLocation(guess)) {
                 boolean foundArchon =
                     rc.canSenseRobotAtLocation(guess) &&
-                    rc.senseRobotAtLocation(guess).getType().equals(RobotType.ARCHON);
+                    rc.senseRobotAtLocation(guess).getType().equals(RobotType.ARCHON) &&
+                    rc.senseRobotAtLocation(guess).getTeam().equals(opponent);
                 removeArchonLocationGuess(rc, guess, foundArchon);
             }
         }
@@ -279,7 +280,7 @@ public strictfp class RobotPlayer {
         for (RobotInfo enemy : enemies) {
             if (enemy.getType().equals(RobotType.ARCHON)) addEnemyArchon(rc, enemy.getLocation());
         }
-        checkGuesses(rc);
+        checkGuesses(rc, opponent);
         checkEnemyArchons(rc);
     }
 
