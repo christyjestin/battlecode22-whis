@@ -141,7 +141,7 @@ public strictfp class Soldier {
         if (target != null) rc.attack(target);
 
         // if the team has figured out that the guess is invalid, then go towards another guess
-        if (!archonGuessStillValid(rc, exploreDest)) {
+        if (goingTowardGuess && !archonGuessStillValid(rc, exploreDest)) {
             MapLocation guess = retrieveArchonLocationGuess(rc);
             goingTowardGuess = guess != null;
             exploreDest = goingTowardGuess ? guess : randomLocation(rc);

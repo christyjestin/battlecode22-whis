@@ -253,15 +253,6 @@ public strictfp class RobotPlayer {
                 // reset array value if there's no robot at that index or if the robot there is not an archon
                 if (!rc.canSenseRobotAtLocation(a) || !rc.senseRobotAtLocation(a).getType().equals(RobotType.ARCHON)) {
                     rc.writeSharedArray(i, 0);
-                    // erase the guess; since this is a known archon location; the wrong guesses have already been
-                    // removed and we're just removing this guess that is no longer necessary
-                    for (int j = RobotPlayer.archonGuessStartIndex; j < RobotPlayer.archonGuessStopIndex; j++) {
-                        if (rc.readSharedArray(j) == encoding) {
-                            System.out.println("encoding: " + encoding + ", j:" + j);
-                            rc.writeSharedArray(j, 0);
-                            break;
-                        }
-                    }
                 }
             }
         }
