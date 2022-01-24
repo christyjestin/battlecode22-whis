@@ -125,12 +125,11 @@ public strictfp class Soldier {
         RobotPlayer.updateEnemyArchons(rc, visionRadiusSquared, opponent);
         RobotPlayer.updateGoldDeposits(rc, visionRadiusSquared);
         MapLocation rcLocation = rc.getLocation();
-        RobotInfo[] enemies = rc.senseNearbyRobots(visionRadiusSquared, opponent);
-        // only update when it's safe since this is bytecode intensive
-        if (enemies.length == 0) noLead.updateGrid(rcLocation);
+        noLead.updateGrid(rcLocation);
 
         // Try to attack someone
         MapLocation target = null;
+        RobotInfo[] enemies = rc.senseNearbyRobots(visionRadiusSquared, opponent);
         for (RobotInfo enemy : enemies) {
             MapLocation enemyLocation = enemy.getLocation();
             if (rc.canAttack(enemyLocation)) {

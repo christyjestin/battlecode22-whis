@@ -53,8 +53,7 @@ public strictfp class Builder {
         }
 
         RobotPlayer.updateGoldDeposits(rc, visionRadiusSquared);
-        // only update when it's safe since this is bytecode intensive
-        if (rc.senseNearbyRobots(visionRadiusSquared, opponent).length == 0) noLead.updateGrid(rcLocation);
+        noLead.updateGrid(rcLocation);
 
         // if the archon's dead, you die as well
         if (!rc.canSenseRobotAtLocation(archonLocation)) rc.disintegrate();
