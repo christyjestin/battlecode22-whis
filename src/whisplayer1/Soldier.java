@@ -78,27 +78,6 @@ public strictfp class Soldier {
         return new MapLocation(encoding / 100, encoding % 100);
     }
 
-    static void removeArchonLocationGuess(RobotController rc, MapLocation guess, boolean correct)
-        throws GameActionException {
-        int encoding = guess.x * 100 + guess.y;
-        for (int i = RobotPlayer.archonGuessStartIndex; i < RobotPlayer.archonGuessStopIndex; i++) {
-            // find the index of the guess' encoding (if it exists - may have already been removed)
-            if (encoding != rc.readSharedArray(i)) continue;
-
-            int category = (i - RobotPlayer.archonGuessStartIndex) / GameConstants.MAX_STARTING_ARCHONS;
-            for (int m = 0; m < 2; m++) {
-                // if the guess is right, then remove all of the guesses except for the ones in the right category
-                // (xAxis, yAxis, rotational); otherwise remove the guesses that are in the wrong category
-                if (correct ? m == category : m != category) continue;
-                for (int n = 0; n < GameConstants.MAX_STARTING_ARCHONS; n++) {
-                    int index = RobotPlayer.archonGuessStartIndex + (m * GameConstants.MAX_STARTING_ARCHONS) + n;
-                    if (rc.readSharedArray(index) != 0) rc.writeSharedArray(index, 0);
-                }
-            }
-            return;
-        }
-    }
-
     // check if the guess has been removed from the shared array by another soldier yet
     static boolean archonGuessStillValid(RobotController rc, MapLocation guess) throws GameActionException {
         int encoding = guess.x * 100 + guess.y;
@@ -161,31 +140,16 @@ public strictfp class Soldier {
         }
         if (target != null) rc.attack(target);
 
-        // if you can't sense an archon at the guess location, then remove it from the shared array
-        if (!reserveMode && goingTowardGuess) {
-            if (closeEnoughTo(rcLocation, exploreDest, visionRadiusSquared)) {
-                boolean foundArchon =
-                    rc.canSenseRobotAtLocation(exploreDest) &&
-                    rc.senseRobotAtLocation(exploreDest).getType().equals(RobotType.ARCHON);
-                // none of the other soldiers need to search this location anymore
-                removeArchonLocationGuess(rc, exploreDest, foundArchon);
-                if (!foundArchon) {
-                    MapLocation guess = retrieveArchonLocationGuess(rc);
-                    goingTowardGuess = guess != null;
-                    exploreDest = goingTowardGuess ? guess : randomLocation(rc);
-                }
-            } else if (!archonGuessStillValid(rc, exploreDest)) {
-                MapLocation guess = retrieveArchonLocationGuess(rc);
-                goingTowardGuess = guess != null;
-                exploreDest = goingTowardGuess ? guess : randomLocation(rc);
-            }
-        }
-
-        // randomly generate a new target location if you get close enough to it, and you're not a reserve soldier
-        if (!reserveMode && closeEnoughTo(rcLocation, exploreDest, actionRadiusSquared / 2)) {
+        // if the team has figured out that the guess is invalid, then go towards another guess
+        if (!archonGuessStillValid(rc, exploreDest)) {
             MapLocation guess = retrieveArchonLocationGuess(rc);
             goingTowardGuess = guess != null;
             exploreDest = goingTowardGuess ? guess : randomLocation(rc);
+        }
+
+        // randomly generate a new target location if you get close enough to it, and you're not a reserve soldier
+        if (!reserveMode && !goingTowardGuess && closeEnoughTo(rcLocation, exploreDest, actionRadiusSquared / 2)) {
+            exploreDest = randomLocation(rc);
         }
         MapLocation targetLocation = exploreDest;
 

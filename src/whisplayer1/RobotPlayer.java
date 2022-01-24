@@ -50,6 +50,14 @@ public strictfp class RobotPlayer {
                 switch (rc.getType()) {
                     case ARCHON:
                         rc.setIndicatorString(
+                            rc.readSharedArray(60) +
+                            " " +
+                            rc.readSharedArray(61) +
+                            " " +
+                            rc.readSharedArray(62) +
+                            " " +
+                            rc.readSharedArray(63) +
+                            " " +
                             rc.readSharedArray(36) +
                             " " +
                             rc.readSharedArray(37) +
@@ -196,6 +204,7 @@ public strictfp class RobotPlayer {
     }
 
     public static void addEnemyArchon(RobotController rc, MapLocation loc) throws GameActionException {
+        removeArchonLocationGuess(rc, loc, true);
         int encoding = loc.x * 100 + loc.y;
         for (int i = enemyArchonStartIndex; i < enemyArchonStopIndex; i++) {
             if (rc.readSharedArray(i) == encoding) return;
@@ -208,6 +217,28 @@ public strictfp class RobotPlayer {
         }
     }
 
+    public static void removeArchonLocationGuess(RobotController rc, MapLocation guess, boolean correct)
+        throws GameActionException {
+        int encoding = guess.x * 100 + guess.y;
+        for (int i = archonGuessStartIndex; i < archonGuessStopIndex; i++) {
+            // find the index of the guess' encoding (if it exists - may have already been removed)
+            if (encoding != rc.readSharedArray(i)) continue;
+
+            rc.writeSharedArray(i, 0);
+            int category = (i - RobotPlayer.archonGuessStartIndex) / GameConstants.MAX_STARTING_ARCHONS;
+            for (int m = 0; m < 3; m++) {
+                // if the guess is right, then remove all of the guesses except for the ones in the right category
+                // (xAxis, yAxis, rotational); otherwise remove the guesses that are in the wrong category
+                if (correct ? m == category : m != category) continue;
+                for (int n = 0; n < GameConstants.MAX_STARTING_ARCHONS; n++) {
+                    int index = RobotPlayer.archonGuessStartIndex + (m * GameConstants.MAX_STARTING_ARCHONS) + n;
+                    if (rc.readSharedArray(index) != 0) rc.writeSharedArray(index, 0);
+                }
+            }
+            return;
+        }
+    }
+
     public static boolean fixedPositionType(RobotType type) throws GameActionException {
         return type.equals(RobotType.ARCHON) || type.equals(RobotType.BUILDER) || type.equals(RobotType.LABORATORY);
     }
@@ -215,12 +246,38 @@ public strictfp class RobotPlayer {
     // check if shared array's locations for enemy archons are still accurate
     public static void checkEnemyArchons(RobotController rc) throws GameActionException {
         for (int i = enemyArchonStartIndex; i < enemyArchonStopIndex; i++) {
-            MapLocation a = new MapLocation(rc.readSharedArray(i) / 100, rc.readSharedArray(i) % 100);
+            int encoding = rc.readSharedArray(i);
+            if (encoding == 0) continue;
+            MapLocation a = new MapLocation(encoding / 100, encoding % 100);
             if (rc.canSenseLocation(a)) {
                 // reset array value if there's no robot at that index or if the robot there is not an archon
                 if (!rc.canSenseRobotAtLocation(a) || !rc.senseRobotAtLocation(a).getType().equals(RobotType.ARCHON)) {
                     rc.writeSharedArray(i, 0);
+                    // erase the guess; since this is a known archon location; the wrong guesses have already been
+                    // removed and we're just removing this guess that is no longer necessary
+                    for (int j = RobotPlayer.archonGuessStartIndex; j < RobotPlayer.archonGuessStopIndex; j++) {
+                        if (rc.readSharedArray(j) == encoding) {
+                            System.out.println("encoding: " + encoding + ", j:" + j);
+                            rc.writeSharedArray(j, 0);
+                            break;
+                        }
+                    }
                 }
+            }
+        }
+    }
+
+    public static void checkGuesses(RobotController rc) throws GameActionException {
+        for (int i = archonGuessStartIndex; i < archonGuessStopIndex; i++) {
+            int encoding = rc.readSharedArray(i);
+            if (encoding == 0) continue;
+
+            MapLocation guess = new MapLocation(encoding / 100, encoding % 100);
+            if (rc.canSenseLocation(guess)) {
+                boolean foundArchon =
+                    rc.canSenseRobotAtLocation(guess) &&
+                    rc.senseRobotAtLocation(guess).getType().equals(RobotType.ARCHON);
+                removeArchonLocationGuess(rc, guess, foundArchon);
             }
         }
     }
@@ -231,6 +288,7 @@ public strictfp class RobotPlayer {
         for (RobotInfo enemy : enemies) {
             if (enemy.getType().equals(RobotType.ARCHON)) addEnemyArchon(rc, enemy.getLocation());
         }
+        checkGuesses(rc);
         checkEnemyArchons(rc);
     }
 
