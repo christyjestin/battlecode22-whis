@@ -25,7 +25,9 @@ public strictfp class RobotPlayer {
     static final int archonLocationStopIndex = archonHealthDropStartIndex;
     static final int archonSpawnStartIndex = archonLocationStartIndex - GameConstants.MAX_STARTING_ARCHONS;
     static final int archonSpawnStopIndex = archonLocationStartIndex;
-    static final int archonCounterIndex = archonSpawnStartIndex - 1;
+    static final int archonGuessStartIndex = archonSpawnStartIndex - GameConstants.MAX_STARTING_ARCHONS * 3;
+    static final int archonGuessStopIndex = archonSpawnStartIndex;
+    static final int archonCounterIndex = archonGuessStartIndex - 1;
 
     static final Direction[] directions = {
         Direction.NORTH,
@@ -47,7 +49,31 @@ public strictfp class RobotPlayer {
             try {
                 switch (rc.getType()) {
                     case ARCHON:
-                        rc.setIndicatorString(rc.readSharedArray(12) + " " + rc.readSharedArray(13));
+                        rc.setIndicatorString(
+                            rc.readSharedArray(36) +
+                            " " +
+                            rc.readSharedArray(37) +
+                            " " +
+                            rc.readSharedArray(38) +
+                            " " +
+                            rc.readSharedArray(39) +
+                            " " +
+                            rc.readSharedArray(40) +
+                            " " +
+                            rc.readSharedArray(41) +
+                            " " +
+                            rc.readSharedArray(42) +
+                            " " +
+                            rc.readSharedArray(43) +
+                            " " +
+                            rc.readSharedArray(44) +
+                            " " +
+                            rc.readSharedArray(45) +
+                            " " +
+                            rc.readSharedArray(46) +
+                            " " +
+                            rc.readSharedArray(47)
+                        );
                         Archon.runArchon(rc);
                         break;
                     case MINER:
