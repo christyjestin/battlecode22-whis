@@ -14,18 +14,18 @@ public strictfp class NoLead {
     int mapHeight;
     int mapWidth;
     int visionRadiusSquared; // visionRadiusSquared of the rc using this NoLead grid
-    double visionRadius;
+    float visionRadius;
     final int sensingRadiusSquared = 8;
-    final double sensingRadius = Math.sqrt(sensingRadiusSquared);
-    double differenceRadius;
+    final float sensingRadius = (float) Math.sqrt(sensingRadiusSquared);
+    float differenceRadius;
     int differenceRadiusSquared;
 
     public NoLead(RobotController rc, int visionRadiusSquared, int mapHeight, int mapWidth) {
         this.rc = rc;
         this.visionRadiusSquared = visionRadiusSquared;
-        this.visionRadius = Math.sqrt(visionRadiusSquared);
+        this.visionRadius = (float) Math.sqrt(visionRadiusSquared);
         this.differenceRadius = visionRadius - sensingRadius;
-        this.differenceRadiusSquared = (int) Math.floor(Math.pow(differenceRadius, 2.0));
+        this.differenceRadiusSquared = (int) (Math.pow(differenceRadius, 2.0));
         this.mapHeight = mapHeight;
         this.mapWidth = mapWidth;
     }
@@ -82,19 +82,11 @@ public strictfp class NoLead {
         updatefromSharedArray();
         updateGridfromArray();
 
-        int rcX = rcLocation.x;
-        int rcY = rcLocation.y;
-        int xMin = Math.max((int) Math.floor(rcX - visionRadius), 0);
-        int xMax = Math.min((int) Math.ceil(rcX + visionRadius), mapWidth - 1);
-        int yMin = Math.max((int) Math.floor(rcY - visionRadius), 0);
-        int yMax = Math.min((int) Math.ceil(rcY + visionRadius), mapHeight - 1);
-        for (int i = xMin / 5; i <= xMax / 5; i++) {
-            for (int j = yMin / 5; j <= yMax / 5; j++) {
-                MapLocation sensingLocation = new MapLocation(5 * i + 2, 5 * j + 2);
-                if (rcLocation.distanceSquaredTo(sensingLocation) <= differenceRadiusSquared) {
-                    grid[i][j] = rc.senseNearbyLocationsWithLead(sensingLocation, sensingRadiusSquared).length == 0;
-                }
-            }
+        int i = rcLocation.x / 5;
+        int j = rcLocation.y / 5;
+        MapLocation sensingLocation = new MapLocation(5 * i + 2, 5 * j + 2);
+        if (rcLocation.distanceSquaredTo(sensingLocation) <= differenceRadiusSquared) {
+            grid[i][j] = rc.senseNearbyLocationsWithLead(sensingLocation, sensingRadiusSquared).length == 0;
         }
 
         // update both internal and shared arrays
