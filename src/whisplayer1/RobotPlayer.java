@@ -331,6 +331,7 @@ public strictfp class RobotPlayer {
         Direction bestDirection = null;
         for (Direction direction : directions) {
             MapLocation loc = rc.adjacentLocation(direction);
+            if (!rc.onTheMap(loc)) continue;
             // skip this location if there's an archon there
             if (rc.canSenseRobotAtLocation(loc) && fixedPositionType(rc.senseRobotAtLocation(loc).getType())) continue;
             int rubble = rc.senseRubble(loc);
