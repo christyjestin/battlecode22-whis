@@ -102,6 +102,14 @@ public strictfp class Archon {
     // write the archon's location to the shared array
     static void writeArchonLocation(RobotController rc) throws GameActionException {
         rc.writeSharedArray(RobotPlayer.archonLocationStartIndex + archonIndex, rcLocation.x * 100 + rcLocation.y);
+        int xMax = mapWidth - 1;
+        int yMax = mapHeight - 1;
+        int xAxisGuessIndex = RobotPlayer.archonGuessStartIndex + archonIndex;
+        int yAxisGuessIndex = xAxisGuessIndex + GameConstants.MAX_STARTING_ARCHONS;
+        int rotationGuessIndex = yAxisGuessIndex + GameConstants.MAX_STARTING_ARCHONS;
+        rc.writeSharedArray(xAxisGuessIndex, rcLocation.x * 100 + (yMax - rcLocation.y));
+        rc.writeSharedArray(yAxisGuessIndex, (xMax - rcLocation.x) * 100 + rcLocation.y);
+        rc.writeSharedArray(rotationGuessIndex, (xMax - rcLocation.x) * 100 + (yMax - rcLocation.y));
     }
 
     static void runArchon(RobotController rc) throws GameActionException {
@@ -111,15 +119,14 @@ public strictfp class Archon {
             RobotPlayer.incrementArray(rc, RobotPlayer.archonCounterIndex);
         }
 
-        // write to shared array for defense
+        // init code code
+        if (mapWidth == -1) mapWidth = rc.getMapWidth();
+        if (mapHeight == -1) mapHeight = rc.getMapHeight();
+        // write to shared array for defense and to guess the enemy's archon locations
         if (rcLocation == null) {
             rcLocation = rc.getLocation();
             writeArchonLocation(rc);
         }
-
-        // init code code
-        if (mapWidth == -1) mapWidth = rc.getMapWidth();
-        if (mapHeight == -1) mapHeight = rc.getMapHeight();
         if (center == null) center = new MapLocation(mapWidth / 2, mapHeight / 2);
         if (towardsCenter == null) towardsCenter = rcLocation.directionTo(center);
         // randomly choose if a direction if the archon is already at the center of the map
