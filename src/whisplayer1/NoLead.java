@@ -33,7 +33,11 @@ public strictfp class NoLead {
     // update internal array using shared array
     public void updatefromSharedArray() throws GameActionException {
         for (int i = 0; i < arrayLength; i++) {
-            array[i] = rc.readSharedArray(RobotPlayer.noLeadGridStartIndex + i);
+            int sharedArrayVal = rc.readSharedArray(RobotPlayer.noLeadGridStartIndex + i);
+            if (array[i] != sharedArrayVal) {
+                array[i] = sharedArrayVal;
+                updateGridfromArray(i);
+            }
         }
     }
 
@@ -46,33 +50,25 @@ public strictfp class NoLead {
         }
     }
 
-    // encode and write grid to internal array
-    public void writeGridToArray() {
-        int arrayIndex = 0;
+    // encode and write grid to internal array for one index
+    public void writeGridToArray(int index) {
         int encoding = 0;
-        for (int i = 0; i < gridLength * gridLength; i++) {
+        for (int i = index * 16; i < (index + 1) * 16; i++) {
             // times 2, plus next value (but written w/ bitwise operators)
             encoding = (encoding << 1) | (grid[i / gridLength][i % gridLength] ? 1 : 0);
-            // 16 grid positions per array index
-            if (i % 16 == 15) {
-                array[arrayIndex] = encoding;
-                encoding = 0;
-                arrayIndex++;
-            }
         }
+        array[index] = encoding;
     }
 
     // update grid by decoding internal array
-    public void updateGridfromArray() {
-        for (int i = 0; i < arrayLength; i++) {
-            int encoding = array[i];
-            // go in reverse order while decoding
-            for (int j = 16 * i + 15; j >= 16 * i; j--) {
-                // equivalent to encoding % 2 == 1 in bitwise operators
-                grid[j / gridLength][j % gridLength] = (encoding & 1) == 1;
-                // divide by 2
-                encoding = encoding >> 1;
-            }
+    public void updateGridfromArray(int index) {
+        int encoding = array[index];
+        // go in reverse order while decoding
+        for (int j = 16 * index + 15; j >= 16 * index; j--) {
+            // equivalent to encoding % 2 == 1 in bitwise operators
+            grid[j / gridLength][j % gridLength] = (encoding & 1) == 1;
+            // divide by 2
+            encoding = encoding >> 1;
         }
     }
 
@@ -80,23 +76,29 @@ public strictfp class NoLead {
         // refresh both internal array and grid
         // without this step, the function would write outdated data back to the shared array
         updatefromSharedArray();
-        updateGridfromArray();
 
-        int i = rcLocation.x / 5;
-        int j = rcLocation.y / 5;
-        MapLocation sensingLocation = new MapLocation(5 * i + 2, 5 * j + 2);
-        if (rcLocation.distanceSquaredTo(sensingLocation) <= differenceRadiusSquared) {
-            grid[i][j] = rc.senseNearbyLocationsWithLead(sensingLocation, sensingRadiusSquared).length == 0;
+        int rcX = rcLocation.x;
+        int rcY = rcLocation.y;
+        int xMin = Math.max((int) Math.floor(rcX - visionRadius), 0);
+        int xMax = Math.min((int) Math.ceil(rcX + visionRadius), mapWidth - 1);
+        int yMin = Math.max((int) Math.floor(rcY - visionRadius), 0);
+        int yMax = Math.min((int) Math.ceil(rcY + visionRadius), mapHeight - 1);
+        for (int i = xMin / 5; i <= xMax / 5; i++) {
+            for (int j = yMin / 5; j <= yMax / 5; j++) {
+                MapLocation sensingLocation = new MapLocation(5 * i + 2, 5 * j + 2);
+                if (rcLocation.distanceSquaredTo(sensingLocation) <= differenceRadiusSquared) {
+                    grid[i][j] = rc.senseNearbyLocationsWithLead(sensingLocation, sensingRadiusSquared).length == 0;
+                    writeGridToArray((i * gridLength + j) / 16);
+                }
+            }
         }
 
         // update both internal and shared arrays
-        writeGridToArray();
         writeToSharedArray();
     }
 
     public MapLocation minerRandomLocation() throws GameActionException {
         updatefromSharedArray();
-        updateGridfromArray();
         MapLocation location = new MapLocation(rng.nextInt(mapWidth), rng.nextInt(mapHeight));
         int i = location.x / 5;
         int j = location.y / 5;
