@@ -3,7 +3,7 @@ package whisplayer1;
 import battlecode.common.*;
 import java.util.Random;
 
-public strictfp class Soldier {
+strictfp class Soldier {
 
     static int visionRadiusSquared = RobotType.SOLDIER.visionRadiusSquared;
     static int actionRadiusSquared = RobotType.SOLDIER.actionRadiusSquared;
@@ -28,10 +28,6 @@ public strictfp class Soldier {
 
     MapLocation randomLocation() throws GameActionException {
         return new MapLocation(rng.nextInt(mapWidth), rng.nextInt(mapHeight));
-    }
-
-    boolean isArchonAtLocation(RobotController rc, MapLocation loc) throws GameActionException {
-        return rc.canSenseRobotAtLocation(loc) && rc.senseRobotAtLocation(loc).getType().equals(RobotType.ARCHON);
     }
 
     int nearbySoldiersCount(RobotController rc) throws GameActionException {
@@ -148,7 +144,7 @@ public strictfp class Soldier {
         // note that currently, once defenseMode is set to false, it won't ever change
         if (defenseMode != null && defenseMode) {
             // if the archon isn't there anymore, then stop defending
-            if (rc.canSenseLocation(defendingLocation) && !isArchonAtLocation(rc, defendingLocation)) {
+            if (rc.canSenseLocation(defendingLocation) && !RobotPlayer.isArchonAtLocation(rc, defendingLocation)) {
                 defenseMode = null;
                 // if there are too many robots nearby, have half of the robots stop defending
             } else if (

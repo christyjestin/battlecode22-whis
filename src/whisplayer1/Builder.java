@@ -2,7 +2,7 @@ package whisplayer1;
 
 import battlecode.common.*;
 
-public strictfp class Builder {
+strictfp class Builder {
 
     static final Direction[] directions = {
         Direction.NORTH,
@@ -21,24 +21,23 @@ public strictfp class Builder {
     static int mapWidth = -1;
     static Team ownTeam = null;
     static Team opponent = null;
-    static MapLocation archonLocation = null;
-    static int archonId = -1;
-    static MapLocation laboratoryLocation = null;
-    static int laboratoryId = -1;
-    static MapLocation rcLocation = null;
-    static NoLead noLead = null;
 
-    static MapLocation findArchonLocation(RobotController rc) throws GameActionException {
+    MapLocation archonLocation = null;
+    int archonId = -1;
+    MapLocation laboratoryLocation = null;
+    int laboratoryId = -1;
+    MapLocation rcLocation = null;
+    NoLead noLead = null;
+
+    MapLocation findArchonLocation(RobotController rc) throws GameActionException {
         for (Direction direction : directions) {
-            MapLocation adjLoc = rc.adjacentLocation(direction);
-            if (rc.canSenseRobotAtLocation(adjLoc) && rc.senseRobotAtLocation(adjLoc).type.equals(RobotType.ARCHON)) {
-                return adjLoc;
-            }
+            MapLocation adjacentLocation = rc.adjacentLocation(direction);
+            if (RobotPlayer.isArchonAtLocation(rc, adjacentLocation)) return adjacentLocation;
         }
         return null;
     }
 
-    static void runBuilder(RobotController rc) throws GameActionException {
+    public void runBuilder(RobotController rc) throws GameActionException {
         // init code
         if (ownTeam == null) ownTeam = rc.getTeam();
         if (opponent == null) opponent = ownTeam.opponent();

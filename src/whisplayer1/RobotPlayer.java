@@ -8,6 +8,9 @@ public strictfp class RobotPlayer {
     static int turnCount = 0;
     static final Random rng = new Random();
     static Soldier soldierController = null;
+    static Builder builderController = null;
+    static Miner minerController = null;
+    static Laboratory laboratoryController = null;
 
     static final int minerCountIndex = 0;
     static final int soldierCountIndex = 1;
@@ -85,17 +88,20 @@ public strictfp class RobotPlayer {
                         Archon.runArchon(rc);
                         break;
                     case MINER:
-                        Miner.runMiner(rc);
+                        if (minerController == null) minerController = new Miner();
+                        minerController.runMiner(rc);
                         break;
                     case SOLDIER:
                         if (soldierController == null) soldierController = new Soldier();
                         soldierController.runSoldier(rc);
                         break;
                     case LABORATORY:
-                        Laboratory.runLaboratory(rc);
+                        if (laboratoryController == null) laboratoryController = new Laboratory();
+                        laboratoryController.runLaboratory(rc);
                         break;
                     case BUILDER:
-                        Builder.runBuilder(rc);
+                        if (builderController == null) builderController = new Builder();
+                        builderController.runBuilder(rc);
                         break;
                     case WATCHTOWER:
                     case SAGE:
@@ -132,6 +138,10 @@ public strictfp class RobotPlayer {
 
     public static Direction turnRight(Direction dir) {
         return dir.rotateRight().rotateRight();
+    }
+
+    public static boolean isArchonAtLocation(RobotController rc, MapLocation loc) throws GameActionException {
+        return rc.canSenseRobotAtLocation(loc) && rc.senseRobotAtLocation(loc).getType().equals(RobotType.ARCHON);
     }
 
     public static Direction[] pathfinder(MapLocation targetLocation, RobotController rc, Direction[] lastThreeMoves)

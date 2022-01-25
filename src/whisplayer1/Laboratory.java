@@ -2,14 +2,14 @@ package whisplayer1;
 
 import battlecode.common.*;
 
-public strictfp class Laboratory {
+strictfp class Laboratory {
 
     static final int visionRadiusSquared = RobotType.LABORATORY.visionRadiusSquared;
     static final int actionRadiusSquared = RobotType.LABORATORY.actionRadiusSquared;
     static Team ownTeam = null;
     static Team opponent = null;
 
-    static int nearbyArchonLevel(RobotController rc) throws GameActionException {
+    int nearbyArchonLevel(RobotController rc) throws GameActionException {
         RobotInfo[] nearbyBots = rc.senseNearbyRobots(visionRadiusSquared, ownTeam);
         for (RobotInfo bot : nearbyBots) {
             if (bot.getType().equals(RobotType.ARCHON)) return bot.getLevel();
@@ -17,7 +17,7 @@ public strictfp class Laboratory {
         return -1;
     }
 
-    static void runLaboratory(RobotController rc) throws GameActionException {
+    public void runLaboratory(RobotController rc) throws GameActionException {
         // init code
         if (ownTeam == null) ownTeam = rc.getTeam();
         if (opponent == null) opponent = ownTeam.opponent();

@@ -3,24 +3,24 @@ package whisplayer1;
 import battlecode.common.*;
 import java.util.Random;
 
-public strictfp class Miner {
+strictfp class Miner {
 
-    static final Random rng = new Random();
-
-    static MapLocation destination = null;
     static final int visionRadiusSquared = RobotType.MINER.visionRadiusSquared;
     static final int actionRadiusSquared = RobotType.MINER.actionRadiusSquared;
     static int mapHeight = -1;
     static int mapWidth = -1;
-    static int id = -1;
     static Team ownTeam = null;
     static Team opponent = null;
-    static boolean reportedDeath = false;
-    static Direction[] lastThreeMoves = { null, null, null };
-    static Direction nextMove = null;
-    static NoLead noLead = null;
 
-    static boolean badLocation(RobotController rc, MapLocation location) throws GameActionException {
+    final Random rng = new Random();
+    MapLocation destination = null;
+    int id = -1;
+    boolean reportedDeath = false;
+    Direction[] lastThreeMoves = { null, null, null };
+    Direction nextMove = null;
+    NoLead noLead = null;
+
+    boolean isBadLocation(RobotController rc, MapLocation location) throws GameActionException {
         if (!rc.canSenseRobotAtLocation(location)) return false;
         RobotInfo robot = rc.senseRobotAtLocation(location);
         // just in case
@@ -32,7 +32,7 @@ public strictfp class Miner {
         );
     }
 
-    static void runMiner(RobotController rc) throws GameActionException {
+    public void runMiner(RobotController rc) throws GameActionException {
         // report likely miner death
         if (rc.getHealth() < 6 && !reportedDeath) {
             RobotPlayer.decrementArray(rc, RobotPlayer.minerCountIndex);
@@ -80,7 +80,7 @@ public strictfp class Miner {
         } else {
             for (MapLocation location : nearbyLocations) {
                 // ignore the location if another robot is already there
-                if (badLocation(rc, location)) continue;
+                if (isBadLocation(rc, location)) continue;
 
                 if (rc.senseGold(location) > 0) {
                     targetLocation = location;
