@@ -3,10 +3,7 @@ package whisplayer1;
 import battlecode.common.*;
 import java.util.Random;
 
-public strictfp class Archon {
-
-    static final Random rng = new Random();
-    static int ratio = -1;
+strictfp class Archon {
 
     static final Direction[] directions = {
         Direction.NORTH,
@@ -20,26 +17,29 @@ public strictfp class Archon {
     };
 
     static MapLocation center = null;
-    static MapLocation rcLocation = null;
     static final int visionRadiusSquared = RobotType.ARCHON.visionRadiusSquared;
     static final int actionRadiusSquared = RobotType.ARCHON.actionRadiusSquared;
-    static Team ownTeam = null;
-    static Team opponent = null;
-    static int archonIndex = -1;
     static int mapWidth = -1;
     static int mapHeight = -1;
-    static Direction towardsCenter = null;
-    static Direction towardsRight = null;
-    static Direction towardsLeft = null;
-    static Direction[] centerDirections = null;
+    static Team ownTeam = null;
+    static Team opponent = null;
     static final int previousHealthDropLength = 20;
+
+    MapLocation rcLocation = null;
+    int ratio = -1;
+    final Random rng = new Random();
+    Direction towardsCenter = null;
+    Direction towardsRight = null;
+    Direction towardsLeft = null;
+    Direction[] centerDirections = null;
+    int archonIndex = -1;
     // note that a positive value in this array means health has DROPPED
     // while a negative value means health has been gained
-    static int[] previousHealthDrops = new int[previousHealthDropLength];
-    static int previousHealth = RobotType.ARCHON.getMaxHealth(1);
+    int[] previousHealthDrops = new int[previousHealthDropLength];
+    int previousHealth = RobotType.ARCHON.getMaxHealth(1);
 
     // check if it is this archon's turn to spawn
-    static boolean myTurn(RobotController rc, int index) throws GameActionException {
+    boolean myTurn(RobotController rc, int index) throws GameActionException {
         int myIndex = RobotPlayer.archonSpawnStartIndex + index;
         int myCount = rc.readSharedArray(myIndex);
         int totalArchons = rc.readSharedArray(RobotPlayer.archonCounterIndex);
@@ -51,7 +51,7 @@ public strictfp class Archon {
         return true;
     }
 
-    static boolean noNearbyLaboratories(RobotController rc) throws GameActionException {
+    boolean noNearbyLaboratories(RobotController rc) throws GameActionException {
         RobotInfo[] nearbyBots = rc.senseNearbyRobots(visionRadiusSquared, ownTeam);
         for (RobotInfo bot : nearbyBots) {
             if (bot.getType().equals(RobotType.LABORATORY)) return false;
@@ -59,7 +59,7 @@ public strictfp class Archon {
         return true;
     }
 
-    static int nearbyBuildersCount(RobotController rc) throws GameActionException {
+    int nearbyBuildersCount(RobotController rc) throws GameActionException {
         int counter = 0;
         RobotInfo[] nearbyBots = rc.senseNearbyRobots(visionRadiusSquared, ownTeam);
         for (RobotInfo bot : nearbyBots) {
@@ -69,7 +69,7 @@ public strictfp class Archon {
     }
 
     // write the archon's health to the shared array and get the minimum health of all archons
-    static boolean anyArchonHealthDrops(RobotController rc) throws GameActionException {
+    boolean anyArchonHealthDrops(RobotController rc) throws GameActionException {
         int health = rc.getHealth();
         int healthDropIndex = RobotPlayer.archonHealthDropStartIndex + archonIndex;
         int spawnIndex = RobotPlayer.archonSpawnStartIndex + archonIndex;
@@ -100,7 +100,7 @@ public strictfp class Archon {
     }
 
     // write the archon's location to the shared array
-    static void writeArchonLocation(RobotController rc) throws GameActionException {
+    void writeArchonLocation(RobotController rc) throws GameActionException {
         rc.writeSharedArray(RobotPlayer.archonLocationStartIndex + archonIndex, rcLocation.x * 100 + rcLocation.y);
         int xMax = mapWidth - 1;
         int yMax = mapHeight - 1;
@@ -112,7 +112,7 @@ public strictfp class Archon {
         rc.writeSharedArray(rotationGuessIndex, (xMax - rcLocation.x) * 100 + (yMax - rcLocation.y));
     }
 
-    static void runArchon(RobotController rc) throws GameActionException {
+    public void runArchon(RobotController rc) throws GameActionException {
         // retrieve an index for this archon
         if (archonIndex == -1) {
             archonIndex = rc.readSharedArray(RobotPlayer.archonCounterIndex);
@@ -122,6 +122,8 @@ public strictfp class Archon {
         // init code code
         if (mapWidth == -1) mapWidth = rc.getMapWidth();
         if (mapHeight == -1) mapHeight = rc.getMapHeight();
+        if (ownTeam == null) ownTeam = rc.getTeam();
+        if (opponent == null) opponent = ownTeam.opponent();
         // write to shared array for defense and to guess the enemy's archon locations
         if (rcLocation == null) {
             rcLocation = rc.getLocation();
@@ -134,8 +136,6 @@ public strictfp class Archon {
         if (towardsRight == null) towardsRight = towardsCenter.rotateRight();
         if (towardsLeft == null) towardsLeft = towardsCenter.rotateLeft();
         if (centerDirections == null) centerDirections = new Direction[] { towardsRight, towardsCenter, towardsLeft };
-        if (ownTeam == null) ownTeam = rc.getTeam();
-        if (opponent == null) opponent = ownTeam.opponent();
 
         // write this archon's health drop from past 10 turns and find out if any archons on your team
         // have had a health drop
