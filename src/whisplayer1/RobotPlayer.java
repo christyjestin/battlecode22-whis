@@ -11,6 +11,7 @@ public strictfp class RobotPlayer {
     static Builder builderController = null;
     static Miner minerController = null;
     static Laboratory laboratoryController = null;
+    static Archon archonController = null;
 
     static final int minerCountIndex = 0;
     static final int soldierCountIndex = 1;
@@ -52,40 +53,8 @@ public strictfp class RobotPlayer {
             try {
                 switch (rc.getType()) {
                     case ARCHON:
-                        rc.setIndicatorString(
-                            rc.readSharedArray(60) +
-                            " " +
-                            rc.readSharedArray(61) +
-                            " " +
-                            rc.readSharedArray(62) +
-                            " " +
-                            rc.readSharedArray(63) +
-                            " " +
-                            rc.readSharedArray(36) +
-                            " " +
-                            rc.readSharedArray(37) +
-                            " " +
-                            rc.readSharedArray(38) +
-                            " " +
-                            rc.readSharedArray(39) +
-                            " " +
-                            rc.readSharedArray(40) +
-                            " " +
-                            rc.readSharedArray(41) +
-                            " " +
-                            rc.readSharedArray(42) +
-                            " " +
-                            rc.readSharedArray(43) +
-                            " " +
-                            rc.readSharedArray(44) +
-                            " " +
-                            rc.readSharedArray(45) +
-                            " " +
-                            rc.readSharedArray(46) +
-                            " " +
-                            rc.readSharedArray(47)
-                        );
-                        Archon.runArchon(rc);
+                        if (archonController == null) archonController = new Archon();
+                        archonController.runArchon(rc);
                         break;
                     case MINER:
                         if (minerController == null) minerController = new Miner();
