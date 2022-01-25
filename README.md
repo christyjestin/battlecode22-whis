@@ -15,7 +15,7 @@ Teams can win by either annihilating the other team's archons or winning on tieb
 </p>
 
 ## Engineering Limitations
-All of the code we wrote can be found under /scr/whisplayer1. Note that the static keyword doesn't actually make properties/methods static in Battlecode (this was part of the rules and was setup by competition staff &mdash; not sure how). Instead all robots had to communicate using a shared array of 64 integers with each integer in the range \[0,2<sup>16</sup>). Robots were further restricted by \"bytecode limits\" i.e. how many atomic instructions each bot could execute per turn. We were also restricted from using thread related commands like Object.wait() since each bot is run by a thread.
+All of the code we wrote can be found under /scr/whisplayer1. Note that the static keyword doesn't actually make properties/methods static in Battlecode (this was part of the rules and was setup by competition staff &mdash; not sure how, but my guess is that each thread has its own classloader). Instead all robots had to communicate using a shared array of 64 integers with each integer in the range \[0,2<sup>16</sup>). Robots were further restricted by \"bytecode limits\" i.e. how many atomic instructions each bot could execute per turn. We were also restricted from using thread related commands like Object.wait() since each bot is run by a thread.
 
 ## Our Strategy
 Our strategy largely revolves around defense and strength in numbers.
