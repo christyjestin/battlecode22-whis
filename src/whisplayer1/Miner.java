@@ -40,9 +40,9 @@ strictfp class Miner {
         }
 
         // init code
+        if (id == -1) id = rc.getID();
         if (mapHeight == -1) mapHeight = rc.getMapHeight();
         if (mapWidth == -1) mapWidth = rc.getMapWidth();
-        if (id == -1) id = rc.getID();
         if (ownTeam == null) ownTeam = rc.getTeam();
         if (opponent == null) opponent = ownTeam.opponent();
         if (noLead == null) noLead = new NoLead(rc, visionRadiusSquared, mapHeight, mapWidth);

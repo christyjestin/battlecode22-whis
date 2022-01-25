@@ -3,21 +3,22 @@ package whisplayer1;
 import battlecode.common.*;
 import java.util.Random;
 
-public strictfp class NoLead {
+strictfp class NoLead {
+
+    static final int gridLength = 12;
+    static final int arrayLength = 9;
+    static final int sensingRadiusSquared = 8;
+    static final float sensingRadius = (float) Math.sqrt(sensingRadiusSquared);
+    static int mapHeight;
+    static int mapWidth;
 
     RobotController rc;
     final Random rng = new Random();
-    final int gridLength = 12;
     boolean[][] grid = new boolean[gridLength][gridLength];
-    final int arrayLength = 9;
     int[] array = new int[arrayLength]; // internal copy of shared array
-    int mapHeight;
-    int mapWidth;
     int visionRadiusSquared; // visionRadiusSquared of the rc using this NoLead grid
     float visionRadius;
-    final int sensingRadiusSquared = 8;
-    final float sensingRadius = (float) Math.sqrt(sensingRadiusSquared);
-    float differenceRadius;
+    float differenceRadius; // vision radius - sensing radius
     int differenceRadiusSquared;
 
     public NoLead(RobotController rc, int visionRadiusSquared, int mapHeight, int mapWidth) {
@@ -26,12 +27,12 @@ public strictfp class NoLead {
         this.visionRadius = (float) Math.sqrt(visionRadiusSquared);
         this.differenceRadius = visionRadius - sensingRadius;
         this.differenceRadiusSquared = (int) (Math.pow(differenceRadius, 2.0));
-        this.mapHeight = mapHeight;
-        this.mapWidth = mapWidth;
+        NoLead.mapHeight = mapHeight;
+        NoLead.mapWidth = mapWidth;
     }
 
     // update internal array using shared array
-    public void updatefromSharedArray() throws GameActionException {
+    void updatefromSharedArray() throws GameActionException {
         for (int i = 0; i < arrayLength; i++) {
             int sharedArrayVal = rc.readSharedArray(RobotPlayer.noLeadGridStartIndex + i);
             if (array[i] != sharedArrayVal) {
@@ -42,7 +43,7 @@ public strictfp class NoLead {
     }
 
     // write the encodings from internal array to shared array
-    public void writeToSharedArray() throws GameActionException {
+    void writeToSharedArray() throws GameActionException {
         for (int i = 0; i < arrayLength; i++) {
             if (rc.readSharedArray(RobotPlayer.noLeadGridStartIndex + i) != array[i]) {
                 rc.writeSharedArray(RobotPlayer.noLeadGridStartIndex + i, array[i]);
@@ -51,7 +52,7 @@ public strictfp class NoLead {
     }
 
     // encode and write grid to internal array for one index
-    public void writeGridToArray(int index) {
+    void writeGridToArray(int index) {
         int encoding = 0;
         for (int i = index * 16; i < (index + 1) * 16; i++) {
             // times 2, plus next value (but written w/ bitwise operators)
@@ -61,7 +62,7 @@ public strictfp class NoLead {
     }
 
     // update grid by decoding internal array
-    public void updateGridfromArray(int index) {
+    void updateGridfromArray(int index) {
         int encoding = array[index];
         // go in reverse order while decoding
         for (int j = 16 * index + 15; j >= 16 * index; j--) {
