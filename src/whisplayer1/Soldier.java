@@ -5,52 +5,45 @@ import java.util.Random;
 
 public strictfp class Soldier {
 
-    static final Random rng = new Random();
-
-    static MapLocation exploreDest = null;
-    static boolean goingTowardGuess = true;
     static int visionRadiusSquared = RobotType.SOLDIER.visionRadiusSquared;
     static int actionRadiusSquared = RobotType.SOLDIER.actionRadiusSquared;
     static int mapWidth = -1;
     static int mapHeight = -1;
     static Team ownTeam = null;
     static Team opponent = null;
-    static boolean reportedDeath = false;
-    static Boolean defenseMode = null;
-    static MapLocation defendingLocation = null;
-    static Boolean reserveMode = rng.nextBoolean();
     static MapLocation center = null;
-    static Direction[] lastThreeMoves = { null, null, null };
-    static Direction nextMove = null;
-    static NoLead noLead = null;
-    static MapLocation savedArchonLocation = null;
-    static MapLocation meetupPoint = null;
 
-    static MapLocation randomLocation(RobotController rc) throws GameActionException {
+    final Random rng = new Random();
+    MapLocation exploreDest = null;
+    boolean goingTowardGuess = true;
+    boolean reportedDeath = false;
+    Boolean defenseMode = null;
+    MapLocation defendingLocation = null;
+    Boolean reserveMode = rng.nextBoolean();
+    Direction[] lastThreeMoves = { null, null, null };
+    Direction nextMove = null;
+    NoLead noLead = null;
+    MapLocation savedArchonLocation = null;
+    MapLocation meetupPoint = null;
+
+    MapLocation randomLocation() throws GameActionException {
         return new MapLocation(rng.nextInt(mapWidth), rng.nextInt(mapHeight));
     }
 
-    static boolean isArchonAtLocation(RobotController rc, MapLocation loc) throws GameActionException {
+    boolean isArchonAtLocation(RobotController rc, MapLocation loc) throws GameActionException {
         return rc.canSenseRobotAtLocation(loc) && rc.senseRobotAtLocation(loc).getType().equals(RobotType.ARCHON);
     }
 
-    static int nearbySoldiersCount(RobotController rc) throws GameActionException {
+    int nearbySoldiersCount(RobotController rc) throws GameActionException {
         RobotInfo[] nearbyBots = rc.senseNearbyRobots(visionRadiusSquared, ownTeam);
         int counter = 0;
         for (RobotInfo bot : nearbyBots) {
-            if (bot.type.equals(RobotType.SOLDIER)) counter++;
+            if (bot.getType().equals(RobotType.SOLDIER)) counter++;
         }
         return counter;
     }
 
-    static boolean anyArchonHealthDrops(RobotController rc) throws GameActionException {
-        for (int i = RobotPlayer.archonHealthDropStartIndex; i < RobotPlayer.archonHealthDropStopIndex; i++) {
-            if (rc.readSharedArray(i) > 0) return true;
-        }
-        return false;
-    }
-
-    static MapLocation mostThreatenedArchonLocation(RobotController rc) throws GameActionException {
+    MapLocation mostThreatenedArchonLocation(RobotController rc) throws GameActionException {
         int highestDrop = 0;
         int index = 0;
         for (int i = RobotPlayer.archonHealthDropStartIndex; i < RobotPlayer.archonHealthDropStopIndex; i++) {
@@ -64,7 +57,7 @@ public strictfp class Soldier {
         return RobotPlayer.retrieveLocationfromArray(rc, RobotPlayer.archonLocationStartIndex + index);
     }
 
-    static MapLocation retrieveArchonLocationGuess(RobotController rc) throws GameActionException {
+    MapLocation retrieveArchonLocationGuess(RobotController rc) throws GameActionException {
         int counter = 0;
         int[] guesses = new int[GameConstants.MAX_STARTING_ARCHONS * 3];
         for (int i = RobotPlayer.archonGuessStartIndex; i < RobotPlayer.archonGuessStopIndex; i++) {
@@ -79,7 +72,7 @@ public strictfp class Soldier {
     }
 
     // check if the guess has been removed from the shared array by another soldier yet
-    static boolean archonGuessStillValid(RobotController rc, MapLocation guess) throws GameActionException {
+    boolean archonGuessStillValid(RobotController rc, MapLocation guess) throws GameActionException {
         int encoding = guess.x * 100 + guess.y;
         for (int i = RobotPlayer.archonGuessStartIndex; i < RobotPlayer.archonGuessStopIndex; i++) {
             if (rc.readSharedArray(i) == encoding) return true;
@@ -101,7 +94,7 @@ public strictfp class Soldier {
         return meetupPoint;
     }
 
-    public static void runSoldier(RobotController rc) throws GameActionException {
+    public void runSoldier(RobotController rc) throws GameActionException {
         // report likely soldier death
         if (rc.getHealth() < 6 && !reportedDeath) {
             RobotPlayer.decrementArray(rc, RobotPlayer.soldierCountIndex);
@@ -117,7 +110,7 @@ public strictfp class Soldier {
         if (exploreDest == null) exploreDest = reserveMode ? center : retrieveArchonLocationGuess(rc);
         // if we weren't able to find an archon at any of the guesses, then explore randomly
         if (exploreDest == null) {
-            exploreDest = randomLocation(rc);
+            exploreDest = randomLocation();
             goingTowardGuess = false;
         }
         if (noLead == null) noLead = new NoLead(rc, visionRadiusSquared, mapHeight, mapWidth);
@@ -143,12 +136,12 @@ public strictfp class Soldier {
         if (goingTowardGuess && !archonGuessStillValid(rc, exploreDest)) {
             MapLocation guess = retrieveArchonLocationGuess(rc);
             goingTowardGuess = guess != null;
-            exploreDest = goingTowardGuess ? guess : randomLocation(rc);
+            exploreDest = goingTowardGuess ? guess : randomLocation();
         }
 
         // randomly generate a new target location if you get close enough to it, and you're not a reserve soldier
         if (!reserveMode && !goingTowardGuess && closeEnoughTo(rcLocation, exploreDest, actionRadiusSquared / 2)) {
-            exploreDest = randomLocation(rc);
+            exploreDest = randomLocation();
         }
         MapLocation targetLocation = exploreDest;
 
@@ -166,7 +159,7 @@ public strictfp class Soldier {
             // if this robot is still a defender, go towards the archon being attacked
             if (defenseMode != null && defenseMode) targetLocation = defendingLocation;
             // if an archon is being attacked, have half of the archons go defend it
-        } else if (defenseMode == null && anyArchonHealthDrops(rc)) {
+        } else if (defenseMode == null && RobotPlayer.anyArchonHealthDrops(rc)) {
             defenseMode = rng.nextBoolean();
             if (defenseMode) {
                 defendingLocation = mostThreatenedArchonLocation(rc);

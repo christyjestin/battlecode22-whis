@@ -28,7 +28,7 @@ public strictfp class Laboratory {
         if (archonLevel == -1) rc.disintegrate();
         // only expend lead if we're not being attacked or if we're in late game
         // also only try transmuting if we can gain an advantage in gold or we can use it to transmute an archon
-        if ((!Soldier.anyArchonHealthDrops(rc) || rc.getRoundNum() > 1900) && (archonLevel != 3 || goldGap < 20)) {
+        if ((!RobotPlayer.anyArchonHealthDrops(rc) || rc.getRoundNum() > 1900) && (archonLevel != 3 || goldGap < 20)) {
             if (rc.canTransmute()) rc.transmute();
         }
     }

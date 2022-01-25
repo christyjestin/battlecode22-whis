@@ -6,8 +6,8 @@ import java.util.Random;
 public strictfp class RobotPlayer {
 
     static int turnCount = 0;
-
     static final Random rng = new Random();
+    static Soldier soldierController = null;
 
     static final int minerCountIndex = 0;
     static final int soldierCountIndex = 1;
@@ -88,7 +88,8 @@ public strictfp class RobotPlayer {
                         Miner.runMiner(rc);
                         break;
                     case SOLDIER:
-                        Soldier.runSoldier(rc);
+                        if (soldierController == null) soldierController = new Soldier();
+                        soldierController.runSoldier(rc);
                         break;
                     case LABORATORY:
                         Laboratory.runLaboratory(rc);
@@ -201,6 +202,13 @@ public strictfp class RobotPlayer {
         }
         Direction[] ret = { lastThreeMoves[1], lastThreeMoves[2], currentMove, redirected ? currentMove : null };
         return ret;
+    }
+
+    public static boolean anyArchonHealthDrops(RobotController rc) throws GameActionException {
+        for (int i = RobotPlayer.archonHealthDropStartIndex; i < RobotPlayer.archonHealthDropStopIndex; i++) {
+            if (rc.readSharedArray(i) > 0) return true;
+        }
+        return false;
     }
 
     public static void addEnemyArchon(RobotController rc, MapLocation loc) throws GameActionException {
