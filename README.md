@@ -1,7 +1,8 @@
 # Team Whis (Battlecode 2022)
-Created by Christy Jestin and David Liu
+### Created by Christy Jestin and David Liu
+This repo houses the code that controls our bot for [Battlecode](https://battlecode.org/), an AI competition hosted @ MIT. 
 
-## Battlecode 2022 Rules
+## Battlecode 2022 Rules Overview
 At a high level, Battlecode 2022 is a 1v1 automated strategy game (like Dota :)) where both teams compete to eliminate the other team's archons (essentially home bases) while accumulating lead and gold. The four major robot types are archons, soldiers, miners, and builders:
 * **Archons** repair and spawn other bots.
 * **Soldiers** attack other bots.
